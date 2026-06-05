@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% if meta_title %}
+        {{ meta_title }}
+    {% else %}
+        BAM-Tech
+    {% endif %}</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+   <link rel="icon" href="/static/favicon.ico">
+  <meta name="description"
+      content="Latest news, music and videos from BAM-Tech">
+
+<meta name="keywords"
+      content="news,music,videos,entertainment">
+
+<meta name="author"
+      content="BAM-Tech">
+
+<meta property="og:title"
+      content="BAM-Tech">
+
+<meta property="og:description"
+      content="Latest News, Music and Videos">
+
+<meta property="og:type"
+      content="website">
+<meta name="description"
+      content="{{ meta_description if meta_description else 'Latest news, music and videos from BAM-Tech' }}">
+
+<meta property="og:title"
+      content="{{ meta_title if meta_title else 'BAM-Tech' }}">
+
+<meta property="og:description"
+      content="{{ meta_description if meta_description else 'Latest news, music and videos from BAM-Tech' }}">
+   {% if meta_image %}
+<meta property="og:image" content="{{ meta_image }}">
+{% endif %}
+</head>
+
+<body class="bg-gray-50">
+
+<!-- HEADER -->
+<header class="bg-white shadow p-4 flex justify-between items-center">
+
+   <!-- <h1 class="text-xl font-bold">My Blog</h1>-->
+<a href="/" class="flex items-center gap-3 group">
+    <!-- Logo Icon -->
+    <svg class="w-10 h-10 text-blue-600 group-hover:text-blue-700 transition" viewBox="0 0 100 100" fill="none">
+        <!-- B shape with circuit pattern -->
+        <path d="M20 15h25c8 0 15 6 15 14v2c0 6-4 11-10 12.5V44c6 1.5 10 6.5 10 12.5v2c0 8-7 14-15 14H20V15z" 
+              stroke="currentColor" stroke-width="6" stroke-linejoin="round" fill="none"/>
+        <!-- Tech circuit dots -->
+        <circle cx="45" cy="28" r="2" fill="currentColor"/>
+        <circle cx="55" cy="50" r="2" fill="currentColor"/>
+        <circle cx="45" cy="72" r="2" fill="currentColor"/>
+        <!-- Signal waves -->
+        <path d="M70 35c3-3 3-8 0-11M75 30c6-6 6-15 0-21" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/>
+    </svg>
+    
+    <!-- Text -->
+    <div class="flex flex-col">
+        <span class="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-blue-600 transition">Bam<span class="text-blue-600">Tech</span></span>
+        <span class="text-xs text-gray-500 -mt-1">Tech Blog</span>
+    </div>
+</a>
+    <!-- NAV -->
+    <nav class="flex gap-4 text-sm">
+        <a href="/" class="hover:text-blue-600">Home</a>
+        <a href="/news" class="hover:text-blue-600">News</a>
+        <a href="/videos" class="hover:text-blue-600">Videos</a>
+        <a href="/music" class="hover:text-blue-600">Music</a>
+    </nav>
+
+    <!-- SEARCH -->
+    <form action="/search" method="GET" class="flex">
+        <input type="text" name="q"
+               placeholder="Search..."
+               class="border px-2 py-1 rounded-l">
+        <button class="bg-black text-white px-3 rounded-r">
+            Search
+        </button>
+    </form>
+
+</header>
+
+
+<!-- CONTENT -->
+<main class="max-w-6xl mx-auto p-4">
+
+    {% block content %}{% endblock %}
+
+</main>
+
+
+<!-- FOOTER -->
+<footer class="bg-black text-white p-8 mt-10">
+
+    <div class="grid md:grid-cols-3 gap-6">
+
+        <div>
+            <h2 class="font-bold">About</h2>
+            <p class="text-sm text-gray-300">
+                Modern FastAPI Blog CMS
+            </p>
+   <h3 class="text-sm ">Company</h3>
+                 <ul class="text-sm">
+                     <li><a href="/about" class="hover:text-white transition">About</a></li>
+                     <li><a href="/contact" class="hover:text-white transition">Contact</a></li>
+                     <li><a href="/blog" class="hover:text-white transition">Blog</a></li>
+                 </ul>
+            
+        </div>
+
+        <div>
+            <h2 class="font-bold">Links</h2>
+            <ul class="text-sm space-y-2">
+                <li><a href="/" class="hover:underline">Home</a></li>
+                <li><a href="/news" class="hover:underline">News</a></li>
+                <li><a href="/videos" class="hover:underline">Videos</a></li>
+            </ul>
+        </div>
+
+        <div>
+         <form action="/subscribe" method="post" >
+            <h2 class="font-bold">Subscribe</h2>
+            <input type="email"name="email" class="w-full p-2 text-black rounded">
+            <button type="submit" class="bg-blue-600 w-full mt-2 py-2 rounded">
+                Subscribe
+            </button>
+        {% if request.query_params.get("subscribed") %}
+<div class="bg-green-100 text-green-700 p-3 rounded mb-4">
+    Subscription successful!
+</div>
+{% endif %}
+ {% if request.query_params.get("message") == "already_subscribed" %}
+<div class="bg-yellow-100 text-yellow-700 p-3 rounded mb-4">
+    You are already subscribed.
+</div>
+{% endif %}
+        </div>
+
+    </div>
+
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,88 @@
+{% for item in feed %}
+
+    {% if item.type == "news" %}
+
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+
+        <img
+            src="{{ item.image }}"
+            loading="lazy"
+            class="w-full h-60 object-cover"
+        >
+
+        <div class="p-5">
+
+            <span class="text-red-600 font-bold">
+                NEWS
+            </span>
+
+            <h3 class="text-xl font-bold mt-2">
+                {{ item.title }}
+            </h3>
+
+            <a href="/news/{{ item.id }}"
+               class="text-blue-600 hover:underline">
+                Read More →
+            </a>
+
+        </div>
+
+    </div>
+
+    {% elif item.type == "music" %}
+
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+
+        <img
+            src="{{ item.cover_image }}"
+            loading="lazy"
+            class="w-full h-60 object-cover"
+        >
+
+        <div class="p-5">
+
+            <span class="text-purple-600 font-bold">
+                MUSIC
+            </span>
+
+            <h3 class="text-xl font-bold mt-2">
+                {{ item.title }}
+            </h3>
+
+            <audio controls class="w-full mt-3">
+                <source src="{{ item.music_file }}">
+            </audio>
+
+        </div>
+
+    </div>
+
+    {% elif item.type == "video" %}
+
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+
+        <video
+            controls
+            preload="metadata"
+            class="w-full h-60 object-cover"
+        >
+            <source src="{{ item.video_file }}">
+        </video>
+
+        <div class="p-5">
+
+            <span class="text-blue-600 font-bold">
+                VIDEO
+            </span>
+
+            <h3 class="text-xl font-bold mt-2">
+                {{ item.title }}
+            </h3>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+{% endfor %}

@@ -1,0 +1,91 @@
+{% extends "frontend/base.html" %}
+
+{% block content %}
+
+<!-- CONTACT HEADER -->
+<section class="max-w-7xl mx-auto px-4 py-12">
+
+    <div class="text-center mb-10">
+
+        <h1 class="text-4xl md:text-5xl font-bold">
+            Contact Us
+        </h1>
+
+        <p class="text-gray-600 mt-4">
+            We would love to hear from you. Send us a message anytime.
+        </p>
+
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-10">
+
+
+        <!-- CONTACT INFO -->
+        <div class="space-y-6">
+
+            <div class="bg-gray-50 p-6 rounded-2xl shadow">
+
+                <h3 class="text-xl font-bold mb-3">
+                    📍 Address
+                </h3>
+
+                <p class="text-gray-600">
+                    Lagos, Nigeria<br>
+                    Media & News Headquarters
+                </p>
+
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-2xl shadow">
+
+                <h3 class="text-xl font-bold mb-3">
+                    📞 Contact
+                </h3>
+
+                <p class="text-gray-600">
+                    Phone: +234 9064941647<br>
+                    Email: tbamidele021@gmail.com
+                </p>
+
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-2xl shadow">
+
+                <h3 class="text-xl font-bold mb-3">
+                    ⏰ Working Hours
+                </h3>
+
+                <p class="text-gray-600">
+                    Monday - Friday: 9AM - 6PM<br>
+                    Saturday: 10AM - 4PM
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- MAP SECTION (OPTIONAL) -->
+<section class="mt-10">
+
+    <div class="max-w-7xl mx-auto px-4">
+
+        <div class="rounded-2xl overflow-hidden shadow">
+
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31705.123456!2d3.3792!3d6.5244!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1"
+                class="w-full h-[300px] md:h-[450px]"
+                loading="lazy">
+            </iframe>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

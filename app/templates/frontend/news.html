@@ -1,0 +1,78 @@
+{% extends "frontend/base.html" %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+    <div class="flex items-center justify-between mb-10">
+
+        <div>
+            <h1 class="text-4xl font-bold">
+                Latest News
+            </h1>
+
+            <p class="text-gray-500 mt-2">
+                Breaking news and trending stories
+            </p>
+        </div>
+
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+        {% for news in news_list %}
+
+        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-2xl transition">
+
+            {% if news.image %}
+            <img
+                src="{{ news.image }}"
+                class="w-full h-56 object-cover"
+            >
+            {% else %}
+            <img
+                src="/static/img/default-news.jpg"
+                class="w-full h-56 object-cover"
+            >
+            {% endif %}
+
+            <div class="p-5">
+
+                <div class="flex justify-between items-center mb-3">
+
+                    <span class="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">
+                        {{ news.category.name if news.category else "No Category" }}
+                    </span>
+
+                    <span class="text-sm text-gray-500">
+                        {{ news.created_at }}
+                    </span>
+
+                </div>
+
+                <h2 class="text-2xl font-bold mb-3">
+                    {{ news.title }}
+                </h2>
+
+                <p class="text-gray-600 line-clamp-3">
+                    {{ news.content[:150] }}...
+                </p>
+
+                <a
+                    href="/news/{{ news.id }}"
+                    class="inline-block mt-5 bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition"
+                >
+                    Read News
+                </a>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

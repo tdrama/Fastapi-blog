@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="p-6 max-w-4xl mx-auto">
+
+    <!-- HEADER -->
+    <div class="flex justify-between items-center mb-6">
+
+        <div>
+            <h1 class="text-3xl font-bold">News Management</h1>
+            <p class="text-gray-500">Create and publish news</p>
+        </div>
+
+        <a href="/dashboard"
+           class="bg-black text-white px-5 py-3 rounded-xl">
+            Dashboard
+        </a>
+
+    </div>
+
+    <!-- FORM -->
+    <form id="musicform" action="/dashboard/news/create"
+          method="POST"
+          enctype="multipart/form-data"
+          class="bg-white p-6 rounded-xl shadow space-y-5">
+
+        <!-- TITLE -->
+        <div>
+            <label class="block text-sm font-medium mb-2">Title</label>
+            <input type="text"
+                   name="title"
+                   placeholder="Enter news title"
+                   class="w-full border p-3 rounded"
+                   required>
+        </div>
+
+        <!-- CONTENT -->
+        <div>
+            <label class="block text-sm font-medium mb-2">Content</label>
+            <textarea name="content"
+                      placeholder="Write news content..."
+                      class="w-full border p-3 rounded h-40"
+                      required></textarea>
+        </div>
+
+        <!-- CATEGORY -->
+<!--        <div>
+            <label class="block text-sm font-medium mb-2">Category</label>
+            <select name="category"
+                    class="w-full border p-3 rounded"
+                    required>
+
+                <option value="">Select Category</option>
+
+                {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+
+            </select>
+        </div> -->
+      <!-- CATEGORY -->
+<div>
+    <label class="block text-sm font-medium mb-2">Category</label>
+
+    <select name="category_id"
+            class="w-full border p-3 rounded"
+            required>
+
+        <option value="">Select Category</option>
+
+        {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+        {% endfor %}
+
+    </select>
+</div>
+        <!-- IMAGE -->
+        <div>
+            <label class="block text-sm font-medium mb-2">Cover Image</label>
+            <input type="file"
+                   name="image"
+                   class="w-full border p-3 rounded">
+        </div>
+
+        <!-- SUBMIT -->
+        <button class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700">
+            Publish News
+        </button>
+
+    </form>
+
+</div>
+<script>
+const form = document.getElementById("musicForm");
+
+form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+
+    const res = await fetch("/dashboard/music/create", {
+        method: "POST",
+        body: formData,
+        credentials: "include"   // 🔥 IMPORTANT FIX
+    });
+
+    if (res.redirected) {
+        window.location.href = res.url;
+    } else {
+        const data = await res.json();
+        console.log(data);
+    }
+});
+</script>
+{% endblock %}

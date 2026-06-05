@@ -1,0 +1,170 @@
+{% extends "frontend/base.html" %}
+
+ {% block content %}
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+    <div class="mb-10">
+
+        <h1 class="text-4xl font-bold">
+            Music
+        </h1>
+
+        <p class="text-gray-500 mt-2">
+            Listen to latest uploaded music
+        </p>
+
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+        {% for music in musics %}
+
+        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-2xl transition">
+
+            <!-- COVER IMAGE -->
+            {% if music.cover_image %}
+            <img
+                src="{{ music.cover_image }}"
+                class="w-full h-64 object-cover"
+            >
+            {% else %}
+            <img
+                src="/static/img/music.jpg"
+                class="w-full h-64 object-cover"
+            >
+            {% endif %}
+
+            <div class="p-5">
+
+                <!-- META -->
+                <div class="flex justify-between text-sm text-gray-500 mb-3">
+
+                    <span>
+                        🎵 {{ music.artist }}
+                    </span>
+
+                    <span>
+                        {{ music.created_at }}
+                    </span>
+
+                </div>
+
+                <!-- TITLE -->
+                <h2 class="text-2xl font-bold mb-3">
+                    {{ music.title }}
+                </h2>
+
+                <!-- DESCRIPTION -->
+                <p class="text-gray-600 mb-5">
+                    {{ music.description }}
+                </p>
+
+                <!-- AUDIO PLAYER -->
+                <audio controls class="w-full">
+                    <source src="{{ music.music_file }}">
+                </audio>
+
+                <!-- DOWNLOAD -->
+                <a
+                    href="{{ music.music_file }}"
+                    download
+                    class="mt-4 inline-block bg-black text-white px-4 py-2 rounded-lg"
+                >
+                    Download Music
+                </a>
+                <p class="text-sm text-gray-400"> 👁 {{ music.views or 0 }} plays </p> 
+          <p class="text-sm text-gray-400"> ⬇️ {{ music.downloads or 0 }} downloads </p>
+                <!-- ===================================== -->
+                <!-- COMMENTS SECTION -->
+                <!-- ===================================== -->
+
+                <div class="mt-6 border-t pt-4">
+
+                    <h3 class="text-lg font-bold mb-3">
+                        💬 Comments ({{ music.comments|length if music.comments else 0 }})
+                    </h3>
+
+                    <!-- COMMENT FORM -->
+<!--                    <form
+                        action="/music/{{ music.id }}/comment"
+                        method="POST"
+                        class="space-y-3 mb-4"
+                    > -->
+                   <form
+    action="{{ url_for('add_music_comment', music_id=music.id) }}"
+    method="POST"
+    class="space-y-3 mb-4"
+>
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder="Your name"
+                            required
+                            class="w-full border rounded-lg px-3 py-2"
+                        >
+
+                        <textarea
+                            name="content"
+                            placeholder="Write a comment..."
+                            required
+                            class="w-full border rounded-lg px-3 py-2"
+                        ></textarea>
+
+                        <button
+                            type="submit"
+                            class="bg-black text-white px-4 py-2 rounded-lg"
+                        >
+                            Post
+                        </button>
+
+                    </form>
+
+                    <!-- COMMENT LIST -->
+                    <div class="space-y-3 max-h-64 overflow-y-auto">
+
+                        {% for comment in music.comments %}
+
+                        <div class="bg-gray-100 p-3 rounded-lg">
+
+                            <div class="flex justify-between text-sm text-gray-500">
+
+                                <strong>
+                                    {{ comment.name }}
+                                </strong>
+
+                                <span>
+                                    {{ comment.created_at }}
+                                </span>
+
+                            </div>
+
+                            <p class="mt-1 text-gray-700">
+                                {{ comment.content }}
+                            </p>
+
+                        </div>
+
+                        {% else %}
+
+                        <p class="text-sm text-gray-400">
+                            No comments yet
+                        </p>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

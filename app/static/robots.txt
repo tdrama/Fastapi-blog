@@ -1,0 +1,5 @@
+from fastapi.responses import FileResponse
+
+@app.get("/robots.txt")
+def robots():
+    return FileResponse("app/static/robots.txt")

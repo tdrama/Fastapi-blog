@@ -1,0 +1,66 @@
+# =========================
+# PYTHON
+# =========================
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# DATABASE
+# =========================
+*.db
+blog.db
+
+# =========================
+# ENVIRONMENT
+# =========================
+.env
+
+# =========================
+# VIRTUAL ENV SYSTEM FILES
+# =========================
+bin/
+include/
+lib/
+lib64/
+pyvenv.cfg
+
+# =========================
+# NODE / TAILWIND
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Tailwind / frontend build
+dist/
+build/
+output.css
+
+# =========================
+# MEDIA UPLOADS (IMPORTANT)
+# =========================
+uploads/
+static/uploads/
+
+# =========================
+# LOGS
+# =========================
+*.log
+logs/
+
+# =========================
+# IDE / SYSTEM
+# =========================
+.vscode/
+.idea/
+.DS_Store
+
+# =========================
+# MIGRATIONS (optional safe ignore)
+# =========================
+alembic/versions/*.pyc
