@@ -21,3 +21,4 @@ python-slugify
 slowapi
 starlette
 httpx
+fastapi-mail==1.6.4
