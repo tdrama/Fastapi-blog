@@ -1,3 +1,4 @@
+
 from fastapi import (
     APIRouter,
     Request,
@@ -29,7 +30,7 @@ templates = Jinja2Templates(
 @router.get("/dashboard")
 def dashboard(request: Request, db: Session = Depends(get_db)):
 
-    current_user: User = Depends(browser_admin_required)
+    current_user: User = Depends(require_admin)
 
     if isinstance(current_user, RedirectResponse):
         return current_user
