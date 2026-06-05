@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-4 md:p-8">
+
+    <div class="flex flex-col md:flex-row md:justify-between items-center">
+
+        <h1 class="text-2xl font-bold">
+            Categories
+        </h1>
+
+        <a href="/dashboard"
+           class="bg-black text-white hover:bg-gray-800 px-4 py-2 rounded">
+            Dashboard
+        </a>
+
+    </div>
+
+</div>
+    <!-- CREATE CATEGORY -->
+
+    <div class="bg-white p-4 rounded shadow mb-6">
+   
+        <form method="post"
+              action="/dashboard/categories/create">
+
+            <div class="mb-4">
+                <label class="block mb-2">
+                    Category Name
+                </label>
+
+                <input
+                    type="text"
+                    name="name"
+                    required
+                    class="w-full border rounded p-3"
+                    placeholder="Sports"
+                >
+            </div>
+
+            <div class="mb-4">
+                <label class="block mb-2">
+                    Slug
+                </label>
+
+                <input
+                    type="text"
+                    name="slug"
+                    class="w-full border rounded p-3"
+                    placeholder="sports"
+                >
+            </div>
+
+            <button
+                type="submit"
+                class="px-4 py-2 border rounded"
+            >
+                Create Category
+            </button>
+
+        </form>
+
+    </div>
+
+    <!-- CATEGORY LIST -->
+
+    <div class="bg-white rounded shadow">
+
+        <table class="w-full">
+
+            <thead>
+                <tr>
+                    <th class="text-left p-3">ID</th>
+                    <th class="text-left p-3">Name</th>
+                    <th class="text-left p-3">Slug</th>
+                    <th class="text-left p-3">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for cat in categories %}
+
+                <tr class="border-t">
+
+                    <td class="p-3">
+                        {{ cat.id }}
+                    </td>
+
+                    <td class="p-3">
+                        {{ cat.name }}
+                    </td>
+
+                    <td class="p-3">
+                        {{ cat.slug }}
+                    </td>
+
+                    <td class="p-3">
+
+                        <a href="/dashboard/categories/delete/{{ cat.id }}">
+                            Delete
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

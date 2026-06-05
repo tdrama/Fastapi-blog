@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="p-6">
+
+    <h1 class="text-3xl font-bold mb-6">
+        Music Management
+    </h1>
+
+              <a href="/dashboard"
+                 class="bg-black text-white px-4 py-2 rounded">
+                  Dashboard
+              </a>
+    <!-- UPLOAD FORM -->
+<!--    <div class="bg-white p-6 rounded-xl shadow mb-8">
+
+        <form action="/dashboard/music/create"
+              method="POST"
+              enctype="multipart/form-data"
+              class="space-y-4">
+
+            <input type="text" name="title"
+                   placeholder="Title"
+                   class="w-full border p-3 rounded">
+
+            <input type="text" name="artist"
+                   placeholder="Artist"
+                   class="w-full border p-3 rounded">
+
+            <textarea name="description"
+                      placeholder="Description"
+                      class="w-full border p-3 rounded h-32"></textarea>
+
+            <input type="file" placeholder="music" name="music"
+                   class="w-full border p-3 rounded">
+
+            <input type="file" placeholder="image" name="cover_image"
+                   class="w-full border p-3 rounded">
+           <select name="category_id" required>
+    {% for cat in categories %}
+        <option value="{{ cat.id }}">
+            {{ cat.name }}
+        </option>
+    {% endfor %}
+</select>
+            <button class="bg-green-600 text-white px-5 py-3 rounded">
+                Upload Music
+            </button>
+
+        </form>
+
+    </div> -->
+  <div class="bg-white p-6 rounded-xl shadow mb-8">
+
+    <form action="/dashboard/music/create"
+          method="POST"
+          enctype="multipart/form-data"
+          class="space-y-4">
+
+        <!-- TITLE -->
+        <input type="text"
+               name="title"
+               placeholder="Title"
+               required
+               class="w-full border p-3 rounded">
+
+        <!-- ARTIST -->
+        <input type="text"
+               name="artist"
+               placeholder="Artist"
+               required
+               class="w-full border p-3 rounded">
+
+        <!-- DESCRIPTION -->
+        <textarea name="description"
+                  placeholder="Description"
+                  class="w-full border p-3 rounded h-32"></textarea>
+
+        <!-- MUSIC FILE -->
+        <div>
+            <label class="block mb-1 font-medium">Music File</label>
+            <input type="file"
+                   name="music"
+                   accept="audio/*"
+                   required
+                   class="w-full border p-3 rounded">
+        </div>
+
+        <!-- COVER IMAGE -->
+        <div>
+            <label class="block mb-1 font-medium">Cover Image</label>
+            <input type="file"
+                   name="cover_image"
+                   accept="image/*"
+                   class="w-full border p-3 rounded">
+        </div>
+
+        <!-- CATEGORY -->
+        <select name="category_id"
+                required
+                class="w-full border p-3 rounded">
+
+            <option value="" disabled selected>Select Category</option>
+
+            {% for cat in categories %}
+                <option value="{{ cat.id }}">
+                    {{ cat.name }}
+                </option>
+            {% endfor %}
+
+        </select>
+
+        <!-- BUTTON -->
+        <button class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded w-full">
+            Upload Music
+        </button>
+
+    </form>
+
+</div>
+
+    <!-- TABLE -->
+    <div class="bg-white rounded-xl shadow overflow-x-auto">
+
+        <table class="w-full">
+
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="p-4">ID</th>
+                    <th class="p-4">Cover</th>
+                    <th class="p-4">Title</th>
+                    <th class="p-4">Artist</th>
+                    <th class="p-4">Audio</th>
+                    <th class="p-4">Plays</th>
+                    <th class="p-4">Created</th>
+                    <th class="p-4">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for music in musics %}
+
+                <tr class="border-t">
+
+                    <td class="p-4">{{ music.id }}</td>
+
+                    <td class="p-4">
+                        {% if music.cover_image %}
+                            <img src="{{ music.cover_image }}" width="60" class="rounded">
+                        {% else %}
+                            No Cover
+                        {% endif %}
+                    </td>
+
+                    <td class="p-4">{{ music.title }}</td>
+                    <td class="p-4">{{ music.artist }}</td>
+
+                    <td class="p-4">
+                        <audio controls>
+                            <source src="{{ music.music_file }}">
+                        </audio>
+                    </td>
+
+                    <td class="p-4">{{ music.plays }}</td>
+
+                    <td class="p-4">
+                        {{ music.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    </td>
+
+                    <td class="p-4 flex gap-2">
+
+                        <a href="/dashboard/music/edit/{{ music.id }}"
+                           class="bg-blue-500 text-white px-3 py-1 rounded">
+                            Edit
+                        </a>
+
+                        <a href="/dashboard/music/delete/{{ music.id }}"
+                           class="bg-red-500 text-white px-3 py-1 rounded">
+                            Delete
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+<div class="flex justify-center items-center gap-3 mt-6">
+
+    {% if page > 1 %}
+    <a href="/dashboard/music?page={{ page - 1 }}"
+       class="px-4 py-2 bg-gray-200 rounded">
+        Previous
+    </a>
+    {% endif %}
+
+    <span class="px-4 py-2">
+        Page {{ page }} of {{ total_pages }}
+    </span>
+
+    {% if page < total_pages %}
+    <a href="/dashboard/music?page={{ page + 1 }}"
+       class="px-4 py-2 bg-gray-200 rounded">
+        Next
+    </a>
+    {% endif %}
+
+</div>
+</div>
+
+{% endblock %}

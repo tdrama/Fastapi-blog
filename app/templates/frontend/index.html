@@ -1,0 +1,425 @@
+{% extends "frontend/base.html" %}
+
+{% block content %}
+
+<!--load more -->
+    
+<section class="relative overflow-hidden">
+
+    <!-- HERO SLIDER -->
+    <div id="heroSlider"
+         class="flex transition-transform duration-500 ease-in-out">
+
+        {% for item in news %}
+  
+        <div class="min-w-full relative">
+ <h2 class="text-xl sm:text-2xl md:text-3xl font-bold mb-4">📰 Top News</h2>
+            <img
+                src="{{ item.image or '/static/img/placeholder.jpg' }}"
+                alt="{{ item.title }}"
+                class="w-full h-96 object-cover"
+            >
+
+            <div class="absolute inset-0 bg-black/40 flex items-end">
+                <div class="p-6 text-white">
+
+      
+                    <span class="bg-red-600 px-3 py-1 rounded text-sm">
+    {{ item.category.name if item.category else "No Category" }}
+</span>
+                    <h2 class="text-3xl font-bold mt-3">
+                        {{ item.title }}
+                    </h2>
+
+                    <a href="/news/{{ item.slug }}"
+                       class="inline-block mt-3 bg-white text-black px-4 py-2 rounded-lg">
+                        Read More
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+</section>
+    <!-- PREVIOUS -->
+<!--    <button
+        onclick="moveSlide(-1)"
+        aria-label="Previous slide"
+        class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white w-10 h-10 rounded-full flex items-center justify-center">
+
+        ❮
+
+    </button>
+
+    <!-- NEXT -->
+    <!--<button
+        onclick="moveSlide(1)"
+        aria-label="Next slide"
+        class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white w-10 h-10 rounded-full flex items-center justify-center">
+
+        ❯
+
+    </button>
+
+</section>
+<!-- SEARCH -->
+<section class="max-w-7xl mx-auto px-4 py-8">
+    <form action="/search" method="GET">
+        <div class="flex flex-col sm:flex-row bg-white rounded-2xl shadow overflow-hidden">
+            <input type="text" name="q" placeholder="Search news, music, videos..."
+                   class="w-full px-5 py-4 outline-none text-base">
+            <button class="bg-black text-white px-8 py-4 font-semibold hover:bg-gray-800 transition active:scale-95">
+                Search
+            </button>
+        </div>
+    </form>
+</section>
+
+<!-- NEWS SLIDER -->
+<!--<section class="max-w-7xl mx-auto px-4 mb-10">
+    <h2 class="text-xl sm:text-2xl md:text-3xl font-bold mb-4">📰 Top News</h2>
+    <div class="overflow-x-auto pb-2 -mx-4 px-4">
+        <div id="newsSlider" class="flex gap-4">
+            {% for item in news %}
+            <div class="min-w-[85%] sm:min-w-[50%] lg:min-w-[33.333%]">
+                <div class="bg-white rounded-2xl shadow overflow-hidden h-full">
+                    <img src="{{ item.image or '/static/img/placeholder.jpg' }}"
+                         class="w-full h-40 sm:h-48 object-cover">
+                    <div class="p-4">
+                        <span class="text-xs bg-red-500 text-white px-2 py-1 rounded-full">{{ item.category }}</span>
+                        <h3 class="font-bold mt-2 text-base sm:text-lg line-clamp-2">{{ item.title }}</h3>
+                        <p class="text-sm text-gray-500 mt-2 line-clamp-3">{{ item.content[:90] }}...</p>
+                        <a href="/news/{{ item.id }}" class="text-blue-600 text-sm mt-3 inline-block hover:underline">Read →</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+        <!-- NEWS -->  
+        <!--<section>  -->
+
+            <h2 class="text-3xl font-bold mb-6">  
+                Breaking News  
+            </h2>  
+
+            <div class="grid md:grid-cols-2 gap-6">  
+
+                {% for item in news %}  
+
+                <div class="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition">  
+
+                    <img  
+                        src="{{ item.image or '/static/img/placeholder.jpg' }}"  
+                        class="w-full h-56 object-cover"  
+                    >  
+
+                    <div class="p-5">  
+<span class="text-xs bg-red-500 text-white px-2 py-1 rounded-full">
+    {{ item.category.name if item.category else "No Category" }}
+</span>
+
+<h3 class="text-xl font-bold mt-4">
+    {{ item.title }}
+</h3>
+
+<p class="text-gray-600 mt-3">
+    {{ (item.content or "")[:120] }}...
+</p>
+
+<div class="flex justify-between items-center mt-5 text-sm text-gray-500">
+
+    <span>
+        👤 {{ item.author.username if item.author else "Admin" }}
+    </span>
+<p class="text-sm text-gray-400">
+    👁 {{ news.views or 0 }} views
+</p>
+    <span>
+        📅 {{ item.created_at.strftime('%d %b %Y') if item.created_at else '' }}
+    </span>
+
+</div>
+
+<a href="/news/{{ item.id }}"
+   class="inline-block mt-4 text-blue-600 hover:underline">
+    Continue Reading →
+</a>
+                    </div>  
+
+                </div>  
+
+                {% endfor %}  
+
+            </div>  
+
+        </section>  
+<!-- MAIN CONTENT -->
+<!--<section class="max-w-7xl mx-auto px-4 pb-16"> -->
+    <!-- End Breaking News -->
+
+<section class="max-w-7xl mx-auto px-4 py-10">
+    <h2 class="text-3xl font-bold mb-6">
+        Latest Updates
+    </h2>
+
+    <div id="feed-container"
+         class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        {% include "frontend/load_more.html" %}
+
+    </div>
+
+</section>
+         <!-- VIDEOS -->
+            
+        <section class="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden flex-col">
+                <h2 class="text-3xl font-bold mb-6">Videos</h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+           
+
+                    {% for video in videos %}
+
+                    <div class="bg-black text-white rounded-2xl overflow-hidden">
+
+                        <video controls class="w-full ht-48 sm:h-52 object-contai  md:object-scale-down ">
+                            <source src="{{ video.video_file }}">
+                        </video>
+
+                        <div class="p-5">
+
+                            <h3 class="font-bold">{{ video.title }}</h3>
+                            <!-- CATEGORY -->
+        <p class="text-sm text-yellow-400 mt-2">
+            📂 {{ video.category.name if video.category else "No Category" }}
+        </p>
+                            <p class="text-gray-300 mt-2">
+                                {{ video.description[:100] if video.description else '' }}
+                            </p>
+                          <p class="text-sm text-gray-500 mt-2">
+                           👤 {{ video.user.username if video.user else "Admin" }} </p>
+                            <a href="{{ video.video_file }}"
+                               download
+                               class="mt-4 inline-block bg-red-600 px-4 py-2 rounded-lg">
+                                Download
+                            </a>
+                           <a href="/videos/{{ video.id }}"
+   class="mt-3 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg">
+    View Video
+</a>
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </section>
+    
+            <!-- VIDEOS -->
+
+                 <!-- MUSIC -->
+                         <section>
+                <h2 class="text-3xl font-bold mb-6">Latest Music</h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    {% for music in musics %}
+
+                    <div class="bg-white rounded-2xl shadow hover:shadow-xl overflow-hidden">
+
+                        <img src="{{ music.cover_image or '/static/img/music.jpg' }}"
+                             class="w-full h-56 sm:ht-48 object-contain md:object-scale-down">
+
+                        <div class="p-5">
+
+                            <h3 class="font-bold">{{ music.title }}</h3>
+
+                            <p class="text-gray-500">{{ music.artist }}</p>
+                            <p class="text-sm text-purple-600 mt-1">
+    📂 {{ music.category.name if music.category else "No Category" }}
+</p>
+                            <audio controls class="w-full mt-3">
+                                <source src="{{ music.music_file }}">
+                            </audio>
+                            <p class="text-sm text-gray-500 mt-2">
+                            👤 {{ music.user.username if music.user else "Admin" }} </p>
+                            <a href="{{ music.music_file }}"
+                               download
+                               class="mt-3 inline-block bg-black text-white px-4 py-2 rounded-lg">
+                                Download
+                            </a>
+                         <a href="/dashboard/music/{{ music.id }}"
+   class="mt-3 inline-block bg-black text-white px-4 py-2 rounded-lg">
+    view music
+</a>
+                             <p class="text-sm text-gray-400">
+    👁 {{ music.views or 0 }} plays
+</p>
+
+<p class="text-sm text-gray-400">
+    ⬇️ {{ music.downloads or 0 }} downloads
+</p>
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                   </div>
+           </section>             
+            
+
+
+<!--<footer class="bg-gray-900 text-gray-400 mt-16">
+    <div class="max-w-7xl mx-auto px-6 py-12">
+        
+        <!-- Logo + Tagline -->
+        <!--<div class="pb-10 border-b border-gray-800">
+            <h3 class="text-white text-xl font-bold mb-3">Modern Media</h3>
+            <p class="text-sm text-gray-400">News, music, videos & posts. All in one feed.</p>
+        </div>
+
+        <!-- Grid: Trending + Links -->
+       <!-- <div class="mt-12 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            
+            <!-- Column 1: Trending - your sidebar code adapted -->
+            <!--<div>
+                <h3 class="text-sm font-semibold text-white tracking-wider uppercase mb-4">Trending</h3>
+                <div class="space-y-3">
+                    {% for item in trending %}
+                    <a href="/news/{{ item.id }}"
+                       class="block border-b border-gray-800 pb-3 hover:text-white transition text-sm line-clamp-2">
+                        {{ item.title }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Column 2: Solutions -->
+           <!-- <div>
+                <h3 class="text-sm font-semibold text-white tracking-wider uppercase mb-4">Solutions</h3>
+                <ul class="space-y-3 text-sm">
+                    <li><a href="/posts" class="hover:text-white transition">Posts</a></li>
+                    <li><a href="/news" class="hover:text-white transition">News</a></li>
+                    <li><a href="/videos" class="hover:text-white transition">Videos</a></li>
+                    <li><a href="/music" class="hover:text-white transition">Music</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 3: Company -->
+            <!--<div>
+                <h3 class="text-sm font-semibold text-white tracking-wider uppercase mb-4">Company</h3>
+                <ul class="space-y-3 text-sm">
+                    <li><a href="/about" class="hover:text-white transition">About</a></li>
+                    <li><a href="/contact" class="hover:text-white transition">Contact</a></li>
+                    <li><a href="/blog" class="hover:text-white transition">Blog</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 4: Social -->
+           <!-- <div>
+                <h3 class="text-sm font-semibold text-white tracking-wider uppercase mb-4">Follow Us</h3>
+                <div class="flex gap-4">
+                    <a href="https://facebook.com" target="_blank" class="text-gray-400 hover:text-white">
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">...</svg>
+                    </a>
+                    <a href="https://youtube.com" target="_blank" class="text-gray-400 hover:text-white">
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">...</svg>
+                    </a>
+                    <a href="https://tiktok.com" target="_blank" class="text-gray-400 hover:text-white">
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">...</svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom -->
+<!--        <div class="mt-12 pt-8 border-t border-gray-800 text-center text-sm text-gray-500">
+            © {{ 2026 }} Modern Media. All rights reserved.
+        </div>
+    </div>
+</footer>                  
+
+<!-- SCRIPTS -->
+<script>
+let currentSlide = 0;
+const heroSlider = document.getElementById("heroSlider");
+
+function moveSlide(dir) {
+ if(!heroSlider) return;
+    const total = heroSlider.children.length;
+    currentSlide = (currentSlide + dir + total) % total;
+    heroSlider.style.transform = `translateX(-${currentSlide * 100}%)`;
+}
+
+setInterval(() => moveSlide(1), 5000);
+
+// NEWS SLIDER - touch/drag support for mobile
+let newsIndex = 0;
+const newsSlider = document.getElementById("newsSlider");
+let startX = 0;
+
+if (newsSlider) {
+    newsSlider.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+    newsSlider.addEventListener('touchend', e => {
+        let diff = e.changedTouches[0].clientX - startX;
+        if (diff > 50) moveNews(-1);
+        if (diff < -50) moveNews(1);
+    });
+}
+
+function moveNews(step) {
+    const total = newsSlider.children.length;
+    const visible = window.innerWidth < 640? 1 : window.innerWidth < 1024? 2 : 3;
+    newsIndex = Math.max(0, Math.min(newsIndex + step, total - visible));
+    newsSlider.style.transform = `translateX(-${newsIndex * (100/visible)}%)`;
+}
+
+// INFINITE SCROLL
+let page = 2;
+let loading = false;
+let stopLoading = false;
+
+window.addEventListener("scroll", async () => {
+
+    if (loading || stopLoading) return;
+
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+
+        loading = true;
+
+        try {
+            const res = await fetch(`/api/load-more?page=${page}`);
+
+            if (!res.ok) {
+                stopLoading = true;
+                return;
+            }
+
+            const data = await res.text();
+
+            if (data.trim() === "") {
+                stopLoading = true;
+                return;
+            }
+
+         document.querySelector("#feed-container")
+    .insertAdjacentHTML("beforeend", data);
+      page++;
+     } catch (err) {
+            console.log(err);
+        }
+
+        loading = false;
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "frontend/base.html" %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+    <div class="mb-10">
+
+        <h1 class="text-4xl font-bold">
+            Videos
+        </h1>
+
+        <p class="text-gray-500 mt-2">
+            Watch latest uploaded videos
+        </p>
+
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+        {% for video in videos %}
+
+        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-2xl transition">
+
+            <video
+                controls
+                class="w-full h-64 object-cover bg-black"
+            >
+                <source src="{{ video.video_file }}">
+            </video>
+
+            <div class="p-5">
+
+                <div class="flex justify-between text-sm text-gray-500 mb-3">
+
+                    <span>
+                        👤 Admin
+                    </span>
+
+                    <span>
+                        {{ video.created_at }}
+                    </span>
+
+                </div>
+
+                <h2 class="text-2xl font-bold mb-3">
+                    {{ video.title }}
+                </h2>
+
+                <p class="text-gray-600">
+                    {{ video.description }}
+                </p>
+           <p class="text-xs text-gray-300 mt-2">
+    ⬇ {{ video.downloads or 0 }} downloads
+</p>
+            </div>
+             {% for comment in video.comments %}
+
+<div class="bg-gray-100 p-3 rounded mb-2">
+    {{ comment.content }}
+</div>
+
+{% endfor %}
+
+<form method="POST" action="/video/comment/{{ video.id }}">
+    <textarea name="content"></textarea>
+    <button>Comment</button>
+</form>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

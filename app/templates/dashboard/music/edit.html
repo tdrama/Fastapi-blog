@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="p-6">
+
+              <a href="/dashboard"
+                 class="bg-black text-white px-4 py-2 rounded">
+                  Dashboard
+           </a>
+    <div class="flex justify-between items-center mb-6">
+
+        <h1 class="text-3xl font-bold">
+            Edit Music
+        </h1>
+
+        <a href="/music"
+           class="bg-black text-white px-4 py-2 rounded">
+            Back
+        </a>
+
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow">
+
+        <!--<form action="/dashboard/music/update/{{ music.id }}"-->
+     <form action="{{ url_for('update_music', music_id=music.id) }}"         method="POST"
+              enctype="multipart/form-data"
+              class="space-y-5">
+
+            <!-- TITLE -->
+            <input type="text"
+                   name="title"
+                   value="{{ music.title }}"
+                   class="w-full border p-3 rounded"
+                   require>
+
+            <!-- ARTIST -->
+            <input type="text"
+                   name="artist"
+                   value="{{ music.artist }}"
+                   class="w-full border p-3 rounded"require>
+
+            <!-- DESCRIPTION -->
+            <textarea name="description"
+                      class="w-full border p-3 rounded h-32"
+                      >{{ music.description }}</textarea>
+
+            <!-- CURRENT COVER -->
+            <div>
+
+                <p class="font-semibold mb-2">Current Cover</p>
+
+                {% if music.cover_image %}
+                    <img src="{{ music.cover_image }}"
+                         class="w-32 h-32 object-cover rounded">
+                {% else %}
+                    <p>No cover image</p>
+                {% endif %}
+
+            </div>
+
+            <!-- NEW COVER -->
+            <input type="file"
+                   name="cover_image"
+                   class="w-full border p-3 rounded">
+
+            <!-- CURRENT AUDIO -->
+            <div>
+
+                <p class="font-semibold mb-2">Current Audio</p>
+
+                <audio controls class="w-full">
+                    <source src="{{ music.music_file }}">
+                </audio>
+
+            </div>
+
+            <!-- NEW AUDIO -->
+            <input type="file"
+                   name="music"
+                   class="w-full border p-3 rounded">
+
+            <!-- BUTTON -->
+            <button class="bg-green-600 text-white px-5 py-3 rounded">
+                Update Music
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

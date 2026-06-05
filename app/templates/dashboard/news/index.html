@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="p-6">
+
+    <div class="flex justify-between mb-6">
+
+        <h1 class="text-3xl font-bold">
+            News Management
+        </h1>
+
+        <div class="flex gap-3">
+
+            <a href="/dashboard/news/create"
+               class="bg-green-600 text-white px-4 py-2 rounded">
+                + Create News
+            </a>
+
+            <a href="/dashboard"
+               class="bg-black text-white px-4 py-2 rounded">
+                Dashboard
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="overflow-x-auto bg-white rounded-xl shadow">
+
+        <table class="w-full">
+
+            <thead class="bg-gray-100">
+
+                <tr>
+                    <th class="p-4 text-left">ID</th>
+                    <th class="p-4 text-left">Title</th>
+                    <th class="p-4 text-left">Category</th>
+                    <th class="p-4 text-left">Image</th>
+                    <th class="p-4 text-left">Created</th>
+                    <th class="p-4 text-left">Actions</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for news in news %}
+
+                <tr class="border-t">
+
+                    <td class="p-4">{{ news.id }}</td>
+                    <td class="p-4">{{ news.title }}</td>
+                    <td class="p-4">
+    {{ news.category.name if news.category else "No Category" }}
+</td>
+
+                    <td class="p-4">
+
+                        {% if news.image %}
+                            <img src="{{ news.image }}" width="70" class="rounded">
+                        {% else %}
+                            No Image
+                        {% endif %}
+
+                    </td>
+
+                    <td class="p-4">{{ news.created_at }}</td>
+
+                    <td class="p-4 flex gap-3">
+
+<a href="/dashboard/news/edit/{{ news.id }}"
+   class="bg-blue-500 text-white px-3 py-2 rounded">
+   Edit
+</a>
+
+<a href="/dashboard/news/delete/{{ news.id }}"
+   class="bg-red-500 text-white px-3 py-2 rounded"
+   onclick="return confirm('Delete this news?')">
+   Delete
+</a>
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+    </div>
+<div class="flex justify-center items-center gap-3 mt-6">
+
+    {% if page > 1 %}
+    <a href="/dashboard/news?page={{ page - 1 }}"
+       class="px-4 py-2 bg-gray-200 rounded">
+        Previous
+    </a>
+    {% endif %}
+
+    <span>
+        Page {{ page }} of {{ total_pages }}
+    </span>
+
+    {% if page < total_pages %}
+    <a href="/dashboard/news?page={{ page + 1 }}"
+       class="px-4 py-2 bg-gray-200  rounded">
+        Next
+    </a>
+    {% endif %}
+
+</div>
+</div>
+
+{% endblock %}

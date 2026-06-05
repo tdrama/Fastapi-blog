@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="text-2xl font-bold mb-4">Categories</h2>
+
+<!-- CREATE FORM -->
+<form method="post" action="/categories/create" class="mb-6">
+
+    <input type="text"
+           name="name"
+           placeholder="Category Name"
+           class="border p-2 w-full mb-2"
+           required>
+
+    <input type="text"
+           name="slug"
+           placeholder="Slug (optional)"
+           class="border p-2 w-full mb-2">
+
+    <button class="bg-blue-500 text-white px-4 py-2">
+        Create Category
+    </button>
+
+</form>
+
+<hr>
+
+<!-- LIST CATEGORIES -->
+{% for cat in categories %}
+    <div class="p-2 border-b flex justify-between">
+
+        <div>
+            <b>{{ cat.name }}</b>
+            <small>({{ cat.slug }})</small>
+        </div>
+
+        <a href="/categories/delete/{{ cat.id }}"
+           class="text-red-500">
+            Delete
+        </a>
+
+    </div>
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ music.title }}
+{% endblock %}
+
+{% block content %}
+
+<div class="max-w-4xl mx-auto py-10">
+
+    <div class="bg-white shadow rounded-xl overflow-hidden">
+
+        <!-- COVER -->
+        {% if music.cover_image %}
+        <img
+            src="{{ music.cover_image }}"
+           
+       class=" w-96 h-48 object-contain md:object-scale-down"        >
+        {% endif %}
+
+        <div class="p-6">
+
+            <!-- TITLE -->
+            <h1 class="text-4xl font-bold">
+                {{ music.title }}
+            </h1>
+
+            <!-- ARTIST -->
+            <p class="text-gray-600 mt-2">
+                Artist:
+                {{ music.artist }}
+            </p>
+
+            <!-- STATS -->
+            <div class="mt-4 flex gap-6">
+
+                <span>
+                    👁 {{ music.views }}
+                    Views
+                </span>
+
+                <span>
+                    ⬇ {{ music.downloads }}
+                    Downloads
+                </span>
+
+                <span>
+                    💬 {{ music.comments|length }}
+                    Comments
+                </span>
+
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="mt-6">
+                {{ music.description }}
+            </div>
+
+            <!-- AUDIO -->
+            <div class="mt-6">
+
+                <audio controls class="w-full">
+
+                    <source
+                        src="{{ music.music_file }}"
+                        type="audio/mpeg"
+                    >
+
+                </audio>
+
+            </div>
+
+            <!-- DOWNLOAD -->
+            <div class="mt-6">
+
+                <a
+                    href="/dashboard/music/music/download/{{ music.id }}"
+                    class="bg-green-600 text-white px-5 py-3 rounded"
+                >
+                    Download Music
+                </a>
+
+            </div>
+
+            <!-- SHARE -->
+            <div class="mt-6">
+
+                <input
+                    type="text"
+                    value="{{ request.url }}"
+                    readonly
+                    class="w-full border p-3 rounded"
+                >
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- COMMENTS -->
+
+    <div class="mt-10 bg-white shadow rounded-xl p-6">
+
+        <h2 class="text-2xl font-bold mb-4">
+
+            Comments
+
+        </h2>
+
+        <form
+            action="/dashboard/music/{{ music.id }}/comment"
+            method="POST"
+            class="space-y-4"
+        >
+
+            <input
+                type="text"
+                name="name"
+                placeholder="Your name"
+                required
+                class="w-full border p-3 rounded"
+            >
+
+            <textarea
+                name="content"
+                placeholder="Write comment..."
+                required
+                class="w-full border p-3 rounded"
+            ></textarea>
+
+            <button
+                type="submit"
+                class="bg-blue-600 text-white px-5 py-3 rounded"
+            >
+                Post Comment
+            </button>
+
+        </form>
+
+        <div class="mt-8">
+
+            {% for comment in music.comments %}
+
+            <div class="border-b py-4">
+
+                <h3 class="font-bold">
+
+                    {{ comment.name }}
+
+                </h3>
+
+                <p>
+
+                    {{ comment.content }}
+
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

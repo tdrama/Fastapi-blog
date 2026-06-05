@@ -1,0 +1,13 @@
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse("app/static/favicon.ico")
+
+
+@app.get("/robots.txt", include_in_schema=False)
+def robots():
+    return FileResponse("app/static/robots.txt")
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+def sitemap():
+    return FileResponse("app/static/sitemap.xml")
