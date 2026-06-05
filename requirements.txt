@@ -22,3 +22,4 @@ slowapi
 starlette
 httpx
 fastapi-mail==1.6.4
+bleach==6.3.0
