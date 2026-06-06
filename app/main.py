@@ -125,7 +125,6 @@ from app.routes.videos import router as videos_router
 from app.routes.music import router as music_router
 from app.routes.comments import router as comments_router
 from app.routes.subscribers import router as subscribers_router
-#from app.routes.admin import router as admin_router
 from app.routes.search import router as search_router
 app.include_router(category.router)
 app.include_router(seo_router)
@@ -137,5 +136,4 @@ app.include_router(videos_router)
 app.include_router(music_router)
 app.include_router(comments_router)
 app.include_router(subscribers_router)
-#app.include_router(admin_router)
 app.include_router(search_router)

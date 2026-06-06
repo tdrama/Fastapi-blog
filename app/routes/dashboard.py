@@ -25,20 +25,13 @@ templates = Jinja2Templates(
     directory="app/templates"
 )
 
-
-
 @router.get("/dashboard")
-def dashboard(request: Request, db: Session = Depends(get_db)):
+def dashboard(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(browser_admin_required)
+):
 
-    current_user: User = Depends(require_admin)
-
-    if isinstance(current_user, RedirectResponse):
-        return current_user
-
-    return templates.TemplateResponse(
-        "dashboard/index.html",
-        {"request": request, "user": current_user}
-    )
     stats = {
         "users": db.query(User).count(),
         "videos": db.query(Video).count(),
@@ -48,20 +41,9 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "subscribers": db.query(Subscriber).count()
     }
 
-    total_music_views = sum(
-        m.views or 0
-        for m in db.query(Music).all()
-    )
-
-    total_video_views = sum(
-        v.views or 0
-        for v in db.query(Video).all()
-    )
-
-    total_news_views = sum(
-        n.views or 0
-        for n in db.query(News).all()
-    )
+    total_music_views = sum(m.views or 0 for m in db.query(Music).all())
+    total_video_views = sum(v.views or 0 for v in db.query(Video).all())
+    total_news_views = sum(n.views or 0 for n in db.query(News).all())
 
     return templates.TemplateResponse(
         "dashboard/index.html",
@@ -74,7 +56,6 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             "total_news_views": total_news_views
         }
     )
-
 # =========================
 # RECENT DATA ENDPOINT
 # =========================
@@ -83,7 +64,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
 def dashboard_recent(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(browser_admin_required)
 ):
 
     return templates.TemplateResponse(
@@ -120,7 +101,7 @@ def dashboard_recent(
 def comments_page(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(browser_admin_required)
 ):
 
     comments = (
@@ -141,7 +122,7 @@ def login_activity(
     request: Request,
     page: int = 1,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(browser_admin_required)
 ):
     page = max(page, 1)
     per_page = 20
@@ -172,7 +153,7 @@ def login_activity(
 def delete_comment(
     comment_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(browser_admin_required)
   ):
     comment = db.query(Comment).filter(
         Comment.id == comment_id
