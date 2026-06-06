@@ -3,8 +3,9 @@ from fastapi import (
     Request,
     Depends,
     Form,
-    UploadFile,
     File,
+    UploadFile,
+    BackgroundTasks,
     HTTPException
 )
 from app.models.stream_log import StreamLog
@@ -114,7 +115,7 @@ def admin_videos(
         .order_by(Video.id.desc())\
         .all()
 
-    categories = db.query(Category)
+    categories = db.query(Category).all()
     return templates.TemplateResponse(
         "dashboard/videos/index.html",
         {
@@ -147,17 +148,18 @@ def create_video_page(
         }
     )
 
-# ====================================================
+# =========================================
 # CREATE VIDEO
 # ====================================================
 @router.post("/dashboard/videos/create")
 def create_video(
     request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
     title: str = Form(...),
     description: str = Form(None),
     video: UploadFile = File(...),
-    category_id: int = Form(...),
-    db: Session = Depends(get_db)
+    category_id: int = Form(...)
 ):
 
     # Get logged-in user
@@ -228,14 +230,12 @@ def create_video(
 
     subscribers = db.query(Subscriber).all()
     for sub in subscribers:
-        try:
-           send_email(
+        background_tasks.add_task(
+           send_email,
                sub.email,
                f"New Video: {new_video.title}",
                new_video.description or ""
-           )    
-        except Exception as e:
-            print("EMAIL ERROR:", e)
+           )
 
     return RedirectResponse(
            "/dashboard/videos",

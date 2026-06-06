@@ -3,6 +3,7 @@ from fastapi import (
     Request,
     Depends,
     Form,
+    BackgroundTasks, 
     UploadFile,
     File,
     HTTPException
@@ -131,6 +132,7 @@ def create_page(request: Request,db: Session = Depends(get_db)
 @router.post("/dashboard/news/create")
 def create_news(
     request: Request,
+    background_tasks: BackgroundTasks,
     title: str = Form(...),
     content: str = Form(...),
     category_id: str = Form(...),
@@ -145,6 +147,7 @@ def create_news(
 
     if existing_slug:
         slug = f"{slug}-{uuid4().hex[:6]}"
+    clean_content = sanitize_html(content or "")
 
     image_path = None
     image_hash = None
@@ -206,22 +209,23 @@ def create_news(
     db.refresh(news)
 
      # SEND EMAIL TO SUBSCRIBERS
+    # =========================
+    # SEND EMAILS (ASYNC)
+    # =========================
     subscribers = db.query(Subscriber).all()
 
     for sub in subscribers:
-        try:
-           send_email(
-               sub.email,
-               f"Breaking News: {news.title}",
-               news.content or ""
-           )
-        except Exception as e:
-            print("Email_error:", e)
+        background_tasks.add_task(
+            send_email,
+            sub.email,
+            f"Breaking News: {news.title}",
+            news.content or ""
+        )
 
     return RedirectResponse(
-          "/dashboard/news",
-           status_code=302
-     )
+        "/dashboard/news",
+        status_code=302
+    )
 
 # ====================================================
 # EDIT PAGE

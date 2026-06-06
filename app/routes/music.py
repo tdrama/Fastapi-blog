@@ -5,6 +5,7 @@ from fastapi import (
     Form,
     UploadFile,
     File,
+    BackgroundTasks,
     HTTPException
 )
 from fastapi.responses import FileResponse
@@ -163,6 +164,7 @@ def create_music_page(
 @router.post("/create")
 def create_music(
     request: Request,
+    background_tasks: BackgroundTasks,
     title: str = Form(...),
     artist: str = Form(...),
     description: str = Form(None),
@@ -287,14 +289,13 @@ def create_music(
     subscribers = db.query(Subscriber).all()
 
     for sub in subscribers:
-        try:
-            send_email(
+        background_tasks.add_task(
+                send_email,
                 sub.email,
                 f"New Music: {new_music.title}",
                 f"{new_music.artist} just uploaded new music."
             )
-        except Exception as e:
-            print("Email failed:", e)
+        
 
     return RedirectResponse(
          "/dashboard/music",
@@ -361,9 +362,16 @@ def update_music(
         if ext not in ALLOWED_AUDIO:
             raise HTTPException(
                 status_code=400,
-                detail="Invalid audio format{ext}"
+                detail="Invalid audio format: {ext}"
             )
-
+         # DELETE OLD AUDIO
+        if music.music_file:
+                 old_path = music.music_file.replace(
+                 "/static/",
+                 "app/static/"
+            )
+        if os.path.exists(old_path):
+                 os.remove(old_path)
         filename = f"{uuid4()}_{music_file.filename}"
 
         path = os.path.join(UPLOAD_DIR_AUDIO, filename)

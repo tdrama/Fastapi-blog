@@ -12,7 +12,6 @@ itsdangerous
 aiofiles
 aiohttp
 aiosqlite
-cloudinary
 cryptography
 python-dotenv
 PyMySQL
