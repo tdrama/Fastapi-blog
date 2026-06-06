@@ -89,20 +89,34 @@ def home(
     items = []
 
     for n in all_news:
-        n.type = "news"
-        items.append(n)
+        items.append({
+            "type": "news",
+            "id": n.id,
+            "title": n.title,
+            "created_at": n.created_at,
+            "obj": n
+        })
 
     for v in all_videos:
-        v.type = "video"
-        items.append(v)
+        items.append({
+            "type": "video",
+            "id": v.id,
+            "title": v.title,
+            "created_at": v.created_at,
+            "obj": v
+        })
 
     for m in all_musics:
-        m.type = "music"
-        items.append(m)
-
+        items.append({
+           "type": "music",
+           "id": m.id,
+           "title": m.title,
+           "created_at": m.created_at,
+           "obj": m
+        })
     # Sort newest first
     items.sort(
-        key=lambda x: x.created_at,
+        key=lambda x: x["created_at"],
         reverse=True
     )
 
@@ -144,19 +158,34 @@ def load_more(
     items = []
 
     for n in news:
-        n.type = "news"
-        items.append(n)
+        items.append({
+            "type": "news",
+            "id": n.id,
+            "title": n.title,
+            "created_at": n.created_at,
+            "obj": n
+        })
 
     for v in videos:
-        v.type = "video"
-        items.append(v)
+        items.append({
+            "type": "video",
+            "id": v.id,
+            "title": v.title,
+            "created_at": v.created_at,
+            "obj": v
+        })
 
     for m in music:
-        m.type = "music"
-        items.append(m)
+        items.append({
+            "type": "music",
+            "id": m.id,
+            "title": m.title,
+            "created_at": m.created_at,
+            "obj": m
+        })
 
     items.sort(
-        key=lambda x: x.created_at,
+        key=lambda x: x["created_at"],
         reverse=True
     )
 
@@ -215,7 +244,7 @@ def news_detail(
             detail="News not found"
         )
 
-    news.views += 1
+    news.views = (news.views or 0) + 1
     db.commit()
 
     comments = db.query(Comment)\
@@ -245,39 +274,6 @@ def news_detail(
 # =========================================
 # ADD NEWS COMMENT
 # =========================================
-
-#@router.post("/news/{news_id}/comment")
-#def add_news_comment(
- #   news_id: int,
-  #  name: str = Form(...),
-   # content: str = Form(...),
-    #db: Session = Depends(get_db)
-#):
-#
- #   news = db.query(News)\
-  #      .filter(News.id == news_id)\
-   #     .first()
-#
- #   if not news:
-  #      raise HTTPException(
-   #         status_code=404,
-    #        detail="News not found"
-     #   )
-#
- #   new_comment = Comment(
-  #      name=name,
-   #     content=content,
-    #    news_id=news_id
-    #)
-#
- #   db.add(new_comment)
-  #  db.commit()
-#
- #   return RedirectResponse(
-  #      f"/news/{news_id}",
-   #     status_code=303
-   # )
-
 # =========================================
 # VIDEOS PAGE
 # =========================================
@@ -304,46 +300,6 @@ def videos_page(
 # VIDEO DETAIL
 # =========================================
 
-#@router.get("/videos/{video_id}")
-#def video_detail(
- #   video_id: int,
-  #  request: Request,
-   # db: Session = Depends(get_db)
-#):
-#
- #   video = db.query(Video)\
-  #      .filter(Video.id == video_id)\
-   #     .first()
-#
- #   if not video:
-  #      raise HTTPException(
-   #         status_code=404,
-    #        detail="Video not found"
-     #   )
-#
- #   video.views += 1
-  #  db.commit()
-#
- #   comments = db.query(Comment)\
-  #      .filter(Comment.video_id == video_id)\
-   #     .order_by(Comment.id.desc())\
-    #    .all()
-#
- #   related_videos = db.query(Video)\
-  #      .filter(Video.id != video_id)\
-   #     .order_by(Video.id.desc())\
-    #    .limit(5)\
-     #   .all()
-#
- #   return templates.TemplateResponse(
-  #      "frontend/video_detail.html",
-   #     {
-    #        "request": request,
-     #       "video": video,
-      #      "comments": comments,
-       #     "related_videos": related_videos
-       # }
-   # )
 # =========================================
 # VIDEO DOWNLOAD ROUTE
 # =========================================
@@ -370,39 +326,6 @@ def download_video(
 # =========================================
 # ADD VIDEO COMMENT
 # =========================================
-
-#@router.post("/videos/{video_id}/comment")
-#def add_video_comment(
- #   video_id: int,
-  #  name: str = Form(...),
-   # content: str = Form(...),
-    #db: Session = Depends(get_db)
-#):
-#
- #   video = db.query(Video)\
-  #      .filter(Video.id == video_id)\
-   #     .first()
-#
- #   if not video:
-  #      raise HTTPException(
-   #         status_code=404,
-    #        detail="Video not found"
-     #   )
-#
- #   new_comment = Comment(
-  #      name=name,
-   #     content=content,
-    #    video_id=video_id
-   # )
-#
- #   db.add(new_comment)
-  #  db.commit()
-#
- #   return RedirectResponse(
-  #      f"/videos/{video_id}",
-   #     status_code=303
-   # )
-
 # =========================================
 # MUSIC PAGE
 # =========================================
@@ -446,7 +369,7 @@ def music_detail(
             detail="Music not found"
         )
 
-    music.views += 1
+    music.views = (music.views or 0) + 1
     db.commit()
 
     comments = db.query(Comment)\
