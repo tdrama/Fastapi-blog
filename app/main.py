@@ -84,7 +84,8 @@ csrf_signer = Signer(settings.SECRET_KEY)
 @app.middleware("http")
 async def secure_csrf_and_headers_middleware(request: Request, call_next):
     # ✅ BYPASS CHECK: Allow the AJAX subscription endpoint to pass through safely without token checks
-    if request.url.path == "/api/v1/subscribe-ajax":
+
+    if request.url.path in ["/api/v1/subscribe-ajax", "/auth/register","/auth/login"]:
         return await call_next(request)
 
     if request.method in ["POST", "PUT", "DELETE", "PATCH"]:
