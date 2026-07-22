@@ -2,115 +2,200 @@
 
 {% block content %}
 
-<div class="p-6 max-w-4xl mx-auto">
-
-    <!-- HEADER -->
+<div class="p-6 max-w-4xl mx-auto space-y-6">
+    <!-- TOP HEADER NAVIGATION BAR -->
     <div class="flex justify-between items-center mb-6">
-
         <div>
-            <h1 class="text-3xl font-bold">News Management</h1>
-            <p class="text-gray-500">Create and publish news</p>
+            <h1 class="text-3xl font-bold text-gray-900">Create News Article</h1>
+            <p class="text-gray-500 mt-1">Publish rich text layout articles and blog reports</p>
         </div>
-
-        <a href="/dashboard"
-           class="bg-black text-white px-5 py-3 rounded-xl">
-            Dashboard
+        <a href="/dashboard/news" class="bg-black hover:bg-gray-800 text-white px-5 py-3 rounded-xl transition font-medium shadow text-center">
+            ← Back to Articles
         </a>
-
     </div>
 
-    <!-- FORM -->
-    <form id="musicform" action="/dashboard/news/create"
-          method="POST"
-          enctype="multipart/form-data"
-          class="bg-white p-6 rounded-xl shadow space-y-5">
+    <!-- MAIN CREATION WORKSPACE CARD WRAPPER -->
+    <div class="bg-white p-6 rounded-2xl shadow border border-gray-100">
+        <form id="newsCreationForm" action="/dashboard/news/create" method="POST" enctype="multipart/form-data" class="space-y-5">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-        <!-- TITLE -->
-        <div>
-            <label class="block text-sm font-medium mb-2">Title</label>
-            <input type="text"
-                   name="title"
-                   placeholder="Enter news title"
-                   class="w-full border p-3 rounded"
-                   required>
-        </div>
+            <!-- ARTICLE TITLE -->
+            <div>
+                <label for="title" class="block mb-1.5 font-semibold text-gray-700 text-sm">Article Title *</label>
+                <input type="text" id="title" name="title" placeholder="Enter headline text" required 
+                       class="w-full border border-gray-300 p-3 rounded-xl outline-none focus:ring-2 focus:ring-black transition font-medium">
+            </div>
 
-        <!-- CONTENT -->
-        <div>
-            <label class="block text-sm font-medium mb-2">Content</label>
-            <textarea name="content"
-                      placeholder="Write news content..."
-                      class="w-full border p-3 rounded h-40"
-                      required></textarea>
-        </div>
+            <!-- CATEGORY LIST WRAPPER SELECTOR -->
+            <div>
+                <label for="category_id" class="block mb-1.5 font-semibold text-gray-700 text-sm">Category Selection *</label>
+                <select id="category_id" name="category_id" required class="w-full border border-gray-300 p-3 rounded-xl bg-white outline-none cursor-pointer">
+                    <option value="" disabled selected>Select an article category</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name|e }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <!-- CATEGORY -->
-<!--        <div>
-            <label class="block text-sm font-medium mb-2">Category</label>
-            <select name="category"
-                    class="w-full border p-3 rounded"
-                    required>
+            <!-- 🎨 RICH TEXT LAYOUT EDITOR BLOCK FIELD -->
+            <div>
+                <label for="newsContentTextArea" class="block mb-1.5 font-semibold text-gray-700 text-sm">Article Body Content *</label>
+                <textarea id="news-content-editor" name="content" placeholder="Compose article block contents here..." class="w-full border p-3 rounded-xl h-64 outline-none"></textarea>
+            </div>
 
-                <option value="">Select Category</option>
+            <!-- OPTIONAL BANNER POSTER BLOCK IMAGE -->
+            <div>
+                <label class="block mb-1.5 font-semibold text-gray-700 text-sm">Featured Banner Image</label>
+                <input type="file" name="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-gray-100 hover:file:bg-gray-200 cursor-pointer border p-2.5 rounded-xl">
+                <p class="text-xs text-gray-400 mt-1">Leave empty if no graphics asset is needed.</p>
+            </div>
 
-                {% for cat in categories %}
-                    <option value="{{ cat }}">{{ cat }}</option>
-                {% endfor %}
-
-            </select>
-        </div> -->
-      <!-- CATEGORY -->
-<div>
-    <label class="block text-sm font-medium mb-2">Category</label>
-
-    <select name="category_id"
-            class="w-full border p-3 rounded"
-            required>
-
-        <option value="">Select Category</option>
-
-        {% for cat in categories %}
-            <option value="{{ cat.id }}">{{ cat.name }}</option>
-        {% endfor %}
-
-    </select>
+            <!-- SELECTION UTILITY ACTION BUTTONS BUTTONS BLOCK -->
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3.5 rounded-xl font-semibold transition shadow-sm w-full cursor-pointer">
+                    Publish News Article
+                </button>
+                <a href="/dashboard/news" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-3.5 rounded-xl font-semibold transition text-center w-full">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
-        <!-- IMAGE -->
-        <div>
-            <label class="block text-sm font-medium mb-2">Cover Image</label>
-            <input type="file"
-                   name="image"
-                   class="w-full border p-3 rounded">
-        </div>
 
-        <!-- SUBMIT -->
-        <button class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700">
-            Publish News
-        </button>
-
-    </form>
-
-</div>
 <script>
-const form = document.getElementById("musicForm");
+    $(document).ready(function() {
+        $('#news-content-editor').summernote({
+            placeholder: 'Compose article block contents here...',
+            tabsize: 2,
+            height: 400,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'underline', 'clear', 'italic']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video']], // Keeps media modules active
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ],
+            callbacks: {
+                // Keep the structural content synchronized dynamically on typing keystrokes
+                onChange: function(contents, $editable) {
+                    $('#news-content-editor').val(contents);
+                },
+                // 💥 INTERCEPT IMAGE DRAG & DROP OR FILE SELECTS
+                onImageUpload: function(files) {
+                    uploadEditorMediaFile(files[0], 'image');
+                }
+            }
+        });
 
-form.addEventListener("submit", async function (e) {
-    e.preventDefault();
+        // 💥 ADD PDF & VIDEO MANUAL DROP AND CHOOSE INTERCEPTOR
+        // This catches document drops directly inside the rich text editing canvas area
+        $('.note-editable').on('drop', function(e) {
+            const dataTransfer = e.originalEvent.dataTransfer;
+            if (dataTransfer && dataTransfer.files && dataTransfer.files.length) {
+                const file = dataTransfer.files[0];
+                const ext = file.name.split('.').pop().toLowerCase();
+                
+                if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+                    e.preventDefault();
+                    uploadEditorMediaFile(file, 'video');
+                } else if (ext === 'pdf') {
+                    e.preventDefault();
+                    uploadEditorMediaFile(file, 'pdf');
+                }
+            }
+        });
 
-    const formData = new FormData(form);
+        // 📂 Unified Media Async Fetch Upload Controller
+        async function uploadEditorMediaFile(file, type) {
+            const formData = new FormData();
+            formData.append("file", file);
+            
+            // Extract active token to satisfy your main.py central verification checking rules
+            const token = document.querySelector('input[name="csrf_token"]').value;
 
-    const res = await fetch("/dashboard/music/create", {
-        method: "POST",
-        body: formData,
-        credentials: "include"   // 🔥 IMPORTANT FIX
+            try {
+                // Uses your centralized media upload endpoint route
+                const response = await fetch('/api/media/upload', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': token
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Upload roadblock encountered");
+                const data = await response.json();
+
+                // 1. EMBED IMAGES
+                if (type === 'image') {
+                    $('#news-content-editor').summernote('insertImage', data.url);
+                } 
+                // 2. EMBED RESPONSIVE HTML5 VIDEO BLOCKS
+                else if (type === 'video') {
+                    const videoNode = `<video src="${data.url}" controls class="w-full max-w-2xl rounded-xl my-4 shadow-sm"></video><p></p>`;
+                    $('#news-content-editor').summernote('pasteHTML', videoNode);
+                } 
+                // 3. EMBED SHARP INTERACTIVE CARD FOR PDF DOWNLOADS
+                else if (type === 'pdf') {
+                    const pdfNode = `
+                        <div class="my-4 p-4 border border-gray-200 rounded-xl bg-gray-50 flex items-center justify-between max-w-md shadow-sm note-editable-pdf-card" contenteditable="false">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">📄</span>
+                                <div>
+                                    <p class="font-semibold text-sm text-gray-800 mb-0.5">${file.name}</p>
+                                    <p class="text-xs text-gray-400 mb-0">PDF Document Attachment</p>
+                                </div>
+                            </div>
+                            <a href="${data.url}" target="_blank" download class="bg-black hover:bg-gray-800 text-white text-xs px-3.5 py-2 rounded-lg transition font-medium no-underline inline-block">
+                                View / Download
+                            </a>
+                        </div><p></p>`;
+                    $('#news-content-editor').summernote('pasteHTML', pdfNode);
+                }
+            } catch (error) {
+                console.error("Media processing runtime failure:", error);
+                alert("Could not process file upload structure.");
+            }
+        }
+
+        // B. Secure Trans-Header Submission for In-Flight Multi-part Streams
+        document.getElementById("newsCreationForm").addEventListener("submit", async function(e) {
+            e.preventDefault(); // Hold back browser redirection loop to inject validation signatures
+
+            const form = e.target;
+            const token = form.querySelector('input[name="csrf_token"]').value;
+
+            // Ensure Summernote content code state variable parses full markup text arrays completely
+            $('#news-content-editor').val($('#news-content-editor').summernote('code'));
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-Token": token 
+                    },
+                    body: formData
+                });
+
+                if (response.redirected) {
+                    window.location.href = response.url; 
+                } else {
+                    const text = await response.text();
+                    document.open();
+                    document.write(text);
+                    document.close();
+                }
+            } catch (err) {
+                console.error(err);
+                alert("A transmission roadblock occurred during media binary article streaming.");
+            }
+        });
     });
-
-    if (res.redirected) {
-        window.location.href = res.url;
-    } else {
-        const data = await res.json();
-        console.log(data);
-    }
-});
 </script>
-{% endblock %}
+
+  {% endblock %}

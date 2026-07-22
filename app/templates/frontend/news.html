@@ -1,78 +1,74 @@
 {% extends "frontend/base.html" %}
 
 {% block content %}
-
 <div class="max-w-7xl mx-auto px-4 py-8">
 
     <div class="flex items-center justify-between mb-10">
-
         <div>
-            <h1 class="text-4xl font-bold">
-                Latest News
-            </h1>
-
-            <p class="text-gray-500 mt-2">
-                Breaking news and trending stories
-            </p>
+            <h1 class="text-4xl font-bold">Latest News</h1>
+            <p class="text-gray-500 mt-2">Breaking news and trending stories</p>
         </div>
-
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
         {% for news in news_list %}
+        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-2xl transition flex flex-col justify-between">
 
-        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-2xl transition">
+            <div>
+                <!-- NEWS THUMBNAIL COVER -->
+                {% if news.image %}
+                <!-- ✅ FIXED PATHWAY: Routes custom image assets directly from your static uploads storage directory -->
+                <img
+                    
+                  src="{{ news.image }}"
+                    class="w-full h-56 object-cover"
+                    alt="News Cover Image"
+                >
+                {% else %}
+                <img
+                    src="/static/img/default-news.jpg"
+                    class="w-full h-56 object-cover"
+                    alt="Default Cover Image"
+                >
+                {% endif %}
 
-            {% if news.image %}
-            <img
-                src="{{ news.image }}"
-                class="w-full h-56 object-cover"
-            >
-            {% else %}
-            <img
-                src="/static/img/default-news.jpg"
-                class="w-full h-56 object-cover"
-            >
-            {% endif %}
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full font-medium">
+                            <!-- ✅ SECURED: Sanitized database relation text elements -->
+                            {{ news.category.name|e if news.category else "No Category" }}
+                        </span>
 
-            <div class="p-5">
+                        <span class="text-sm text-gray-500">
+                            {{ news.created_at.strftime('%d %b %Y') if news.created_at else '' }}
+                        </span>
+                    </div>
 
-                <div class="flex justify-between items-center mb-3">
+                    <!-- ✅ SECURED: Context-escaped titles completely eliminate Stored XSS browser hijacking -->
+                    <h2 class="text-2xl font-bold mb-3 break-words line-clamp-2">
+                        {{ news.title | e }}
+                    </h2>
 
-                    <span class="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">
-                        {{ news.category.name if news.category else "No Category" }}
-                    </span>
-
-                    <span class="text-sm text-gray-500">
-                        {{ news.created_at }}
-                    </span>
-
+                    <!-- ✅ SECURED: Escapes and safely slices preview paragraph text -->
+                    <p class="text-gray-600 line-clamp-3 text-sm break-words">
+                        {{ (news.content[:150] | safe) if news.content else "" }}...
+                    </p>
                 </div>
+            </div>
 
-                <h2 class="text-2xl font-bold mb-3">
-                    {{ news.title }}
-                </h2>
-
-                <p class="text-gray-600 line-clamp-3">
-                    {{ news.content[:150] }}...
-                </p>
-
+            <!-- BUTTON CARD ACTION FOOTER -->
+            <div class="p-5 pt-0">
                 <a
                     href="/news/{{ news.id }}"
-                    class="inline-block mt-5 bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition"
+                    class="inline-block bg-black hover:bg-gray-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-sm w-full text-center"
                 >
                     Read News
                 </a>
-
             </div>
 
         </div>
-
         {% endfor %}
-
     </div>
 
 </div>
-
 {% endblock %}

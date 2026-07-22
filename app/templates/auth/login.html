@@ -1,66 +1,58 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class="min-h-screen flex items-center justify-center bg-gray-100">
-
     <div class="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-md">
-
-        <h1 class="text-3xl font-bold text-center mb-6">
-            Login
-        </h1>
+        <h1 class="text-3xl font-bold text-center mb-6">Login</h1>
 
         {% if error %}
-        <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
-            {{ error }}
-        </div>
+        <div class="bg-red-100 text-red-700 p-3 rounded mb-4">{{ error }}</div>
         {% endif %}
 
-        <form
-            action="/auth/login"
-            method="post"
-            class="space-y-4"
-        >
-
-            <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                required
-                class="w-full border p-4 rounded-lg"
-            >
-
-            <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                required
-                class="w-full border p-4 rounded-lg"
-            >
-
-            <button
-                class="w-full bg-black text-white py-4 rounded-lg"
-            >
-                Login
-            </button>
-
+        <!-- 💥 FIXED: Added an ID to the form to handle submission securely -->
+        <form id="loginForm" action="/auth/login" method="post" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="email" name="email" id="emailInput" placeholder="Email" required class="w-full border p-4 rounded-lg">
+            <input type="password" name="password" id="passwordInput" placeholder="Password" required class="w-full border p-4 rounded-lg">
+            <button type="submit" class="w-full bg-black text-white py-4 rounded-lg">Login</button>
         </form>
 
-        <p class="text-center mt-4">
-
-            No account?
-
-            <a
-                href="/auth/register"
-                class="text-blue-600"
-            >
-                Register
-            </a>
-
-        </p>
-
+        <p class="text-center mt-4">No account? <a href="/auth/register" class="text-blue-600">Register</a></p>
     </div>
-
 </div>
 
+<!-- 💥 REUSABLE NATIVE FRONTEND TOKEN SUBMITTER -->
+<script>
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
+    e.preventDefault(); // Stop normal submission
+    
+    const form = e.target;
+    const token = form.querySelector('input[name="csrf_token"]').value;
+    
+    // Package parameters into a standard browser URL boundary string
+    const formData = new URLSearchParams();
+    formData.append("email", document.getElementById("emailInput").value);
+    formData.append("password", document.getElementById("passwordInput").value);
+
+    // Send data to backend along with your strict CSRF Header verification token
+    const response = await fetch(form.action, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRF-Token": token  // 👈 Sends the key right to our updated middleware
+        },
+        body: formData.toString()
+    });
+
+    if (response.redirected) {
+        window.location.href = response.url; // Handle Redirects cleanly
+    } else {
+        // If an authentication error happened, reload the HTML layout content
+        const text = await response.text();
+        document.open();
+        document.write(text);
+        document.close();
+    }
+});
+</script>
 {% endblock %}

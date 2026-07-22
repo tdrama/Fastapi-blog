@@ -1,130 +1,64 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class="p-6">
+    <h1 class="text-3xl font-bold mb-6">Music Management</h1>
 
-    <h1 class="text-3xl font-bold mb-6">
-        Music Management
-    </h1>
+    <a href="/dashboard" class="bg-black text-white px-4 py-2 rounded">Dashboard</a>
 
-              <a href="/dashboard"
-                 class="bg-black text-white px-4 py-2 rounded">
-                  Dashboard
-              </a>
     <!-- UPLOAD FORM -->
-<!--    <div class="bg-white p-6 rounded-xl shadow mb-8">
-
-        <form action="/dashboard/music/create"
+    <div class="bg-white p-6 rounded-xl shadow mb-8">                    
+        <form id="uploadMusicForm" action="/dashboard/music/create"
               method="POST"
               enctype="multipart/form-data"
               class="space-y-4">
 
-            <input type="text" name="title"
-                   placeholder="Title"
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <!-- TITLE -->
+            <input type="text" name="title" placeholder="Title" required
                    class="w-full border p-3 rounded">
 
-            <input type="text" name="artist"
-                   placeholder="Artist"
+            <!-- ARTIST -->
+            <input type="text" name="artist" placeholder="Artist" required
                    class="w-full border p-3 rounded">
 
-            <textarea name="description"
-                      placeholder="Description"
+            <!-- DESCRIPTION -->
+            <textarea name="description" placeholder="Description"
                       class="w-full border p-3 rounded h-32"></textarea>
 
-            <input type="file" placeholder="music" name="music"
-                   class="w-full border p-3 rounded">
+            <!-- MUSIC FILE -->
+            <div>
+                <label class="block mb-1 font-medium">Music File</label>
+                <input type="file" name="music" accept="audio/*" required
+                       class="w-full border p-3 rounded">
+            </div>
 
-            <input type="file" placeholder="image" name="cover_image"
-                   class="w-full border p-3 rounded">
-           <select name="category_id" required>
-    {% for cat in categories %}
-        <option value="{{ cat.id }}">
-            {{ cat.name }}
-        </option>
-    {% endfor %}
-</select>
-            <button class="bg-green-600 text-white px-5 py-3 rounded">
+            <!-- COVER IMAGE -->
+            <div>
+                <label class="block mb-1 font-medium">Cover Image</label>
+                <input type="file" name="cover_image" accept="image/*"
+                       class="w-full border p-3 rounded">
+            </div>
+
+            <!-- CATEGORY -->
+            <select name="category_id" required class="w-full border p-3 rounded">
+                <option value="" disabled selected>Select Category</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name|e }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- BUTTON -->
+            <button class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded w-full">
                 Upload Music
             </button>
-
         </form>
-
-    </div> -->
-  <div class="bg-white p-6 rounded-xl shadow mb-8">
-
-    <form action="/dashboard/music/create"
-          method="POST"
-          enctype="multipart/form-data"
-          class="space-y-4">
-
-        <!-- TITLE -->
-        <input type="text"
-               name="title"
-               placeholder="Title"
-               required
-               class="w-full border p-3 rounded">
-
-        <!-- ARTIST -->
-        <input type="text"
-               name="artist"
-               placeholder="Artist"
-               required
-               class="w-full border p-3 rounded">
-
-        <!-- DESCRIPTION -->
-        <textarea name="description"
-                  placeholder="Description"
-                  class="w-full border p-3 rounded h-32"></textarea>
-
-        <!-- MUSIC FILE -->
-        <div>
-            <label class="block mb-1 font-medium">Music File</label>
-            <input type="file"
-                   name="music"
-                   accept="audio/*"
-                   required
-                   class="w-full border p-3 rounded">
-        </div>
-
-        <!-- COVER IMAGE -->
-        <div>
-            <label class="block mb-1 font-medium">Cover Image</label>
-            <input type="file"
-                   name="cover_image"
-                   accept="image/*"
-                   class="w-full border p-3 rounded">
-        </div>
-
-        <!-- CATEGORY -->
-        <select name="category_id"
-                required
-                class="w-full border p-3 rounded">
-
-            <option value="" disabled selected>Select Category</option>
-
-            {% for cat in categories %}
-                <option value="{{ cat.id }}">
-                    {{ cat.name }}
-                </option>
-            {% endfor %}
-
-        </select>
-
-        <!-- BUTTON -->
-        <button class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded w-full">
-            Upload Music
-        </button>
-
-    </form>
-
-</div>
+    </div>
 
     <!-- TABLE -->
     <div class="bg-white rounded-xl shadow overflow-x-auto">
-
         <table class="w-full">
-
             <thead class="bg-gray-100">
                 <tr>
                     <th class="p-4">ID</th>
@@ -137,82 +71,158 @@
                     <th class="p-4">Actions</th>
                 </tr>
             </thead>
-
             <tbody>
-
-                {% for music in musics %}
-
+                {% for item in musics %}
                 <tr class="border-t">
-
-                    <td class="p-4">{{ music.id }}</td>
+                    <td class="p-4">{{ item.id }}</td>
 
                     <td class="p-4">
-                        {% if music.cover_image %}
-                            <img src="{{ music.cover_image }}" width="60" class="rounded">
+                        {% if item.cover_image %}
+                            <img src="{{ url_for('static', path='uploads/' ~ item.cover_image) }}" w	idth="60" class="rounded" alt="Cover">
                         {% else %}
                             No Cover
                         {% endif %}
                     </td>
 
-                    <td class="p-4">{{ music.title }}</td>
-                    <td class="p-4">{{ music.artist }}</td>
+                    <td class="p-4">{{ item.title|e }}</td>
+                    <td class="p-4">{{ item.artist|e }}</td>
 
                     <td class="p-4">
                         <audio controls>
-                            <source src="{{ music.music_file }}">
+                            <source src="{{ url_for('static', path='uploads/' ~ item.music_file) }}">
                         </audio>
                     </td>
 
-                    <td class="p-4">{{ music.plays }}</td>
-
-                    <td class="p-4">
-                        {{ music.created_at.strftime('%Y-%m-%d %H:%M') }}
-                    </td>
+                    <td class="p-4">{{ item.views or 0 }}</td>
+                    <td class="p-4">{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
 
                     <td class="p-4 flex gap-2">
-
-                        <a href="/dashboard/music/edit/{{ music.id }}"
+                        <a href="/dashboard/music/edit/{{ item.id }}"
                            class="bg-blue-500 text-white px-3 py-1 rounded">
                             Edit
                         </a>
-
-                        <a href="/dashboard/music/delete/{{ music.id }}"
-                           class="bg-red-500 text-white px-3 py-1 rounded">
-                            Delete
-                        </a>
-
+                        
+                        <!-- Delete as POST form -->
+                        <form method="post" action="/dashboard/music/delete/{{ item.id }}" 
+                              class="inline delete-track-form" onsubmit="return confirm('Delete this track?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded">
+                                Delete
+                            </button>
+                        </form>
                     </td>
-
                 </tr>
-
                 {% endfor %}
-
             </tbody>
-
         </table>
-
     </div>
-<div class="flex justify-center items-center gap-3 mt-6">
+ <!--  INTEGRATED SECURE ALIGNED PAGINATION CONTROL PANEL FOOTER -->
+        <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
+            <span class="text-sm text-gray-600">
+                Page <span class="font-semibold text-black">{{ page if page else 1 }}</span> of <span class="font-semibold text-black">{{ total_pages if total_pages > 0 else 1 }}</span>
+            </span>
 
-    {% if page > 1 %}
-    <a href="/dashboard/music?page={{ page - 1 }}"
-       class="px-4 py-2 bg-gray-200 rounded">
-        Previous
-    </a>
-    {% endif %}
+            <div class="flex gap-2">
+                <!-- PREVIOUS SWITCH TRIGGER -->
+                {% if has_prev %}
+                <a href="/dashboard/music?page={{ prev_page }}" class="px-4 py-2 border bg-white text-gray-800 rounded-xl hover:bg-gray-100 font-medium text-sm transition shadow-sm">
+                    ← Previous
+                </a>
+                {% else %}
+                <button disabled class="px-4 py-2 border bg-gray-100 text-gray-400 rounded-xl font-medium text-sm cursor-not-allowed">
+                    ← Previous
+                </button>
+                {% endif %}
 
-    <span class="px-4 py-2">
-        Page {{ page }} of {{ total_pages }}
-    </span>
+                <!-- NEXT SWITCH TRIGGER -->
+                {% if has_next %}
+                <a href="/dashboard/music?page={{ next_page }}" class="px-4 py-2 border bg-white text-gray-800 rounded-xl hover:bg-gray-100 font-medium text-sm transition shadow-sm">
+                    Next →
+                </a>
+                {% else %}
+                <button disabled class="px-4 py-2 border bg-gray-100 text-gray-400 rounded-xl font-medium text-sm cursor-not-allowed">
+                    Next →
+                </button>
+                {% endif %}
+            </div>
+        </div>
 
-    {% if page < total_pages %}
-    <a href="/dashboard/music?page={{ page + 1 }}"
-       class="px-4 py-2 bg-gray-200 rounded">
-        Next
-    </a>
-    {% endif %}
-
+    </div> <!-- Closes outer table container boundary card -->
 </div>
-</div>
+
+<script>
+// 1. ASYNCHRONOUS MUSIC UPLOAD HANDLING
+const uploadForm = document.getElementById("uploadMusicForm");
+if (uploadForm) {
+    uploadForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const formData = new FormData(uploadForm);
+        const csrfToken = formData.get("csrf_token");
+
+        try {
+            const res = await fetch(uploadForm.action, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-CSRF-Token": csrfToken
+                },
+                credentials: "include"
+            });
+
+            if (res.redirected) {
+                window.location.href = res.url;
+            } else if (res.ok) {
+                window.location.reload(); // Reload the tracks table cleanly on success
+            } else {
+                const data = await res.json();
+                alert(data.detail || "Failed to upload track");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("An error occurred during media transmission.");
+        }
+    });
+}
+
+// 2. DELEGATED ROW ASYNCHRONOUS TRACK REMOVAL HANDLING
+document.querySelectorAll(".delete-track-form").forEach(form => {
+    form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        
+        // Retain native visual prompt workflow inside JS loop logic
+        if (!confirm("Are you sure you want to permanently delete this track?")) {
+            return;
+        }
+
+        const formData = new FormData(form);
+        const csrfToken = formData.get("csrf_token");
+
+        try {
+            const res = await fetch(form.action, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-CSRF-Token": csrfToken
+                },
+                credentials: "include"
+            });
+
+            if (res.redirected) {
+                window.location.href = res.url;
+            } else if (res.ok) {
+                // Instantly scrub the row from the view grid without forcing an aggregate page pull
+                form.closest("tr").remove();
+            } else {
+                const data = await res.json();
+                alert(data.detail || "Failed to complete deletion routing.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("An execution error happened while removing this track entry.");
+        }
+    });
+});
+
+</script>
 
 {% endblock %}

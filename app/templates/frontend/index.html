@@ -2,38 +2,45 @@
 
 {% block content %}
 
-<!--load more -->
-    
-<section class="relative overflow-hidden">
-
-    <!-- HERO SLIDER -->
-    <div id="heroSlider"
-         class="flex transition-transform duration-500 ease-in-out">
+<!-- ================= HERO SLIDER VIEWPORT MASK ================= -->
+<section class="relative w-full overflow-hidden bg-gray-900 rounded-2xl shadow-lg mb-10">
+    <!-- Viewport sliding container track track-line layout -->
+    <div id="heroSlider" class="flex w-full transition-transform duration-700 ease-in-out">
 
         {% for item in news %}
-  
-        <div class="min-w-full relative">
- <h2 class="text-xl sm:text-2xl md:text-3xl font-bold mb-4">📰 Top News</h2>
+        <div class="min-w-full w-full relative h-[400px] md:h-[500px] flex-shrink-0">
+            
+            <!-- OVERLAY COVER IMAGE -->
+            {% if item.image %}
             <img
-                src="{{ item.obj.image or '/static/img/placeholder.jpg' }}"
-                alt="{{ item.obj.title }}"
-                class="w-full h-96 object-cover"
+                
+               src="{{ item.image }}"
+                alt="{{ item.title | e }}"
+                class="w-full h-full object-cover"
             >
+            {% else %}
+            <img
+                src="/static/img/placeholder.jpg"
+                alt="Placeholder"
+                class="w-full h-full object-cover"
+            >
+            {% endif %}
 
-            <div class="absolute inset-0 bg-black/40 flex items-end">
-                <div class="p-6 text-white">
+            <!-- FLOATING DETAILS PANEL CARD -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end">
+                <div class="p-6 md:p-10 text-white w-full max-w-3xl">
 
-      
-                    <span class="bg-red-600 px-3 py-1 rounded text-sm">
-    {{ item.obj.category.name if item.obj.category else "No Category" }}
-</span>
-                    <h2 class="text-3xl font-bold mt-3">
-                        {{ item.obj.title }}
+                    <span class="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-md uppercase tracking-wider">
+                        {{ item.category.name|e if item.category else "No Category" }}
+                    </span>
+
+                    <h2 class="text-2xl md:text-4xl font-bold mt-3 leading-tight break-words">
+                        {{ item.title | e }}
                     </h2>
 
-                    <a href="/news/{{ item.obj.slug }}"
-                       class="inline-block mt-3 bg-white text-black px-4 py-2 rounded-lg">
-                        Read More
+                    <a href="/news/{{ item.id }}"
+                       class="inline-block mt-4 bg-white hover:bg-gray-100 text-black font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow">
+                        Read Article →
                     </a>
 
                 </div>
@@ -43,274 +50,341 @@
         {% endfor %}
 
     </div>
+
+    <!-- CAROUSEL NAVIGATION CONTROLS INTERFACES -->
+    {% if news|length > 1 %}
+    <button onclick="moveSlider(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center font-bold transition z-20">‹</button>
+    <button onclick="moveSlider(1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center font-bold transition z-20">›</button>
+    {% endif %}
 </section>
 
-</section>
-<!-- SEARCH -->
-<section class="max-w-7xl mx-auto px-4 py-8">
+
+<!-- ================= SEARCH INPUT FORM BLOCK ================= -->
+<section class="max-w-7xl mx-auto mb-10">
     <form action="/search" method="GET">
-        <div class="flex flex-col sm:flex-row bg-white rounded-2xl shadow overflow-hidden">
-            <input type="text" name="q" placeholder="Search news, music, videos..."
-                   class="w-full px-5 py-4 outline-none text-base">
-            <button class="bg-black text-white px-8 py-4 font-semibold hover:bg-gray-800 transition active:scale-95">
+        <div class="flex flex-col sm:flex-row bg-white rounded-2xl shadow overflow-hidden border">
+            <input type="text"
+                   name="q"
+                   required
+                   placeholder="Search news, music, videos..."
+                   class="w-full px-5 py-4 outline-none text-base bg-white">
+            <button type="submit" class="bg-black text-white px-8 py-4 font-semibold hover:bg-gray-800 transition shrink-0">
                 Search
             </button>
         </div>
     </form>
 </section>
 
-        <!-- NEWS -->  
-        <!--<section>  -->
 
-            <h2 class="text-3xl font-bold mb-6">  
-                Breaking News  
-            </h2>  
+<!-- ================= BREAKING NEWS FEED GRID ================= -->
+<section class="mb-14">
+    <h2 class="text-3xl font-bold mb-6">Breaking News</h2>
+    <div class="grid md:grid-cols-2 gap-6">
 
-            <div class="grid md:grid-cols-2 gap-6">  
+        {% for item in news %}
+        <div class="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition flex flex-col justify-between">
+            <div>
+                {% if item.image %}
+                <img src="{{item.image }}" class="w-full h-56 object-cover" alt="Cover">
+                {% else %}
+                <img src="/static/img/placeholder.jpg" class="w-full h-56 object-cover" alt="Placeholder">
+                {% endif %}
 
-                {% for item in news %}  
+                <div class="p-5">
+                    <span class="text-xs bg-red-500 text-white px-2.5 py-1 rounded-full font-semibold">
+                        {{ item.category.name|e if item.category else "No Category" }}
+                    </span>
+                    <h3 class="text-xl font-bold mt-4 break-words line-clamp-2">
+                        {{ item.title | e }}
+                    </h3>
+                    <p class="text-gray-600 mt-3 text-sm break-words line-clamp-3">
+                        {{ (item.content or "")[:120] | safe }}...
+                    </p>
+                </div>
+            </div>
 
-                <div class="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition">  
-
-                    <img  
-                        src="{{ item.obj.image or '/static/img/placeholder.jpg' }}"  
-                        class="w-full h-56 object-cover"  
-                    >  
-
-                    <div class="p-5">  
-<span class="text-xs bg-red-500 text-white px-2 py-1 rounded-full">
-    {{ item.obj.category.name if item.obj.category else "No Category" }}
-</span>
-
-<h3 class="text-xl font-bold mt-4">
-    {{ item.obj.title }}
-</h3>
-
-<p class="text-gray-600 mt-3">
-    {{ (item.obj.content or "")[:120] }}...
-</p>
-
-<div class="flex justify-between items-center mt-5 text-sm text-gray-500">
-
-    <span>
-        👤 {{ item.obj.author.username if item.obj.author else "Admin" }}
-    </span>
-<p class="text-sm text-gray-400">
-    👁 {{ news.obj.views or 0 }} views
-</p>
-    <span>
-        📅 {{ item.obj.created_at.strftime('%d %b %Y') if item.obj.created_at else '' }}
-    </span>
-
-</div>
-
-<a href="/news/{{ item.id }}"
-   class="inline-block mt-4 text-blue-600 hover:underline">
-    Continue Reading →
-</a>
-                    </div>  
-
-                </div>  
-
-                {% endfor %}  
-
-            </div>  
-
-        </section>  
-<!-- MAIN CONTENT -->
-<!--<section class="max-w-7xl mx-auto px-4 pb-16"> -->
-    <!-- End Breaking News -->
-
-<section class="max-w-7xl mx-auto px-4 py-10">
-    <h2 class="text-3xl font-bold mb-6">
-        Latest Updates
-    </h2>
-
-    <div id="feed-container"
-         class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        {% include "frontend/load_more.html" %}
+            <div class="p-5 pt-0">
+                <div class="flex flex-wrap justify-between items-center text-xs text-gray-400 border-t pt-4 gap-2">
+                    <span>👤 {{ item.author.username|e if item.author else "Admin" }}</span>
+                    <span>👁 {{ item.views or 0 }} views</span>
+                    <span>📅 {{ item.created_at.strftime('%d %b %Y') if item.created_at else '' }}</span>
+                </div>
+                <a href="/news/{{ item.id }}" class="inline-block mt-4 text-blue-600 hover:text-blue-800 font-semibold text-sm transition">
+                    Continue Reading →
+                </a>
+            </div>
+        </div>
+        {% endfor %}
 
     </div>
-
 </section>
-         <!-- VIDEOS -->
+
+
+<!-- ================= LOAD MORE EXTENSION ARCHITECTURE ================= -->
+<section class="max-w-7xl mx-auto mb-14">
+    <h2 class="text-3xl font-bold mb-6">Latest Updates</h2>
+    <div id="feed-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% include "frontend/load_more.html" %}
+    </div>
+</section>
+
+
+<!-- ================= PUBLIC VIDEOS DISPLAY GRID ================= -->
+<!-- ✅ FIXED: Removed broken text tags and structured layout correctly -->
+<section class="bg-white rounded-2xl shadow border p-6 md:p-8 mb-14">
+    <h2 class="text-3xl font-bold mb-6">Featured Videos</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+        {% for video in videos %}
+        <div class="bg-black text-white rounded-2xl overflow-hidden shadow flex flex-col justify-between">
+           <video controls class="w-full h-48 sm:h-52 object-cover bg-black" preload="metadata">
+                <source src="{{ url_for('static', path='uploads/' ~ video.video_file) }}" type="video/mp4">
+                Your browser does not support video playbacks.
+            </video> 
+
+            <div class="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-lg line-clamp-1">{{ video.title | e }}</h3>
+                    <p class="text-xs text-yellow-400 mt-1.5 font-medium">
+                        📂 {{ video.category.name|e if video.category else "No Category" }}
+                    </p>
+                    <p class="text-gray-400 text-xs mt-2 line-clamp-2 break-words">
+                        {{ video.description[:100]|e if video.description else '' }}
+                    </p>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-gray-800 flex justify-between items-center text-xs text-gray-500">
+                    <span>👤 {{ video.user.username|e if video.user else "Admin" }}</span>
+                    <span>👁 {{ video.views or 0 }} plays</span>
+                </div>
+                
+                <a href="/videos/{{ video.id }}" class="mt-4 block w-full text-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2.5 rounded-xl transition shadow">
+                    View Video Interface
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+</section>
+<!-- ================= LATEST MUSIC GRID ================= -->
+<section class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold mb-6">Latest Music</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for music in musics %}
+        <!-- flex-col and justify-between keep all music cards uniform in height -->
+        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-xl transition flex flex-col justify-between">
             
-        <section class="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden flex-col">
-                <h2 class="text-3xl font-bold mb-6">Videos</h2>
+            <!-- UPPER DETAILS LAYOUT -->
+            <div>
+                {% if music.cover_image %}
+                <img class="w-full h-56 object-cover" 
+                     src="{{ url_for('static', path='uploads/' ~ music.cover_image) }}" 
+                     alt="{{ music.title | e }}">
+                {% else %}
+                <img class="w-full h-56 object-cover" 
+                     src="/static/img/music_default.jpg" 
+                     alt="Default Cover">
+                {% endif %}
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-           
-
-                    {% for video in videos %}
-
-                    <div class="bg-black text-white rounded-2xl overflow-hidden">
-
-                        <video controls class="w-full ht-48 sm:h-52 object-contai  md:object-scale-down ">
-                            <source src="{{ video.obj.video_file }}">
-                        </video>
-
-                        <div class="p-5">
-
-                            <h3 class="font-bold">{{ video.obj.title }}</h3>
-                            <!-- CATEGORY -->
-        <p class="text-sm text-yellow-400 mt-2">
-            📂 {{ video.obj.category.name if video.obj.category else "No Category" }}
-        </p>
-                            <p class="text-gray-300 mt-2">
-                                {{ video.obj.description[:100] if video.obj.description else '' }}
-                            </p>
-                          <p class="text-sm text-gray-500 mt-2">
-                           👤 {{ video.obj.user.username if video.obj.user else "Admin" }} </p>
-                            <a href="{{ video.obj.video_file }}"
-                               download
-                               class="mt-4 inline-block bg-red-600 px-4 py-2 rounded-lg">
-                                Download
-                            </a>
-                           <a href="/videos/{{ video.id }}"
-   class="mt-3 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg">
-    View Video
-</a>
-                        </div>
-
+                <div class="p-5 pb-0">
+                    <div class="flex justify-between text-xs text-gray-500 mb-2">
+                        <span class="truncate pr-2 font-medium">🎵 {{ music.artist | e }}</span>
+                        <span>{{ music.created_at.strftime('%d %b %Y') if music.created_at else '' }}</span>
                     </div>
+                    
+                    <!-- ✅ SECURED: Context-escaped track headers protect against XSS -->
+                    <h3 class="font-bold text-xl text-gray-900 break-words mb-2">
+                        {{ music.title | e }}
+                    </h3>
+                    
+                    <p class="text-gray-500 text-sm break-words line-clamp-2 mb-4">
+                        {{ music.description | e }}
+                    </p>
+                </div>
+            </div>
 
-                    {% endfor %}
+            <!-- LOWER PLAYER LAYER -->
+            <div class="p-5 pt-0">
+                {% if music.music_file %}
+                <audio controls class="w-full mb-4" preload="metadata">
+                    <source src="{{ url_for('static', path='uploads/' ~ music.music_file) }}">
+                    Your browser does not support audio playback.
+                </audio>
+                {% else %}
+                <p class="text-red-500 mb-4 text-xs font-medium">Audio track un-routable</p>
+                {% endif %}
 
+                <!-- METRICS FOOTER -->
+                <div class="flex justify-between items-center text-xs text-gray-400 font-medium pt-2 border-t">
+                    <span>👁 {{ music.views or 0 }} plays</span>
+                    <span>⬇️ {{ music.downloads or 0 }} downloads</span>
                 </div>
 
-            </section>
-    
-            <!-- VIDEOS -->
+                <a href="/music/{{ music.id }}" 
+                   class="mt-4 block w-full text-center bg-black hover:bg-gray-800 text-white text-xs font-semibold py-2.5 rounded-xl transition shadow">
+                    View Track Page
+                </a>
+            </div>
 
-                 <!-- MUSIC -->
-                         <section>
-                <h2 class="text-3xl font-bold mb-6">Latest Music</h2>
+        </div>
+        {% else %}
+        <div class="col-span-full bg-white shadow rounded-2xl p-8 text-center text-gray-400 italic text-sm">
+            No music tracks available at this time.
+        </div>
+        {% endfor %}
+    </div>
+</section>
+<div id="infinite-scroll-anchor" class="w-full h-10 flex items-center justify-center py-6">
+    <div id="feed-spinner-loader" class="hidden w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+</div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                    {% for music in musics %}
-
-                    <div class="bg-white rounded-2xl shadow hover:shadow-xl overflow-hidden">
-
-                        <img src="{{ music.obj.cover_image or '/static/img/music.jpg' }}"
-                             class="w-full h-56 sm:ht-48 object-contain md:object-scale-down">
-
-                        <div class="p-5">
-
-                            <h3 class="font-bold">{{ music.obj.title }}</h3>
-
-                            <p class="text-gray-500">{{ music.obj.artist }}</p>
-                            <p class="text-sm text-purple-600 mt-1">
-    📂 {{ music.obj.category.name if music.obj.category else "No Category" }}
-</p>
-                            <audio controls class="w-full mt-3">
-                                <source src="{{ music.obj.music_file }}">
-                            </audio>
-                            <p class="text-sm text-gray-500 mt-2">
-                            👤 {{ music.obj.user.username if music.obj.user else "Admin" }} </p>
-                            <a href="{{ music.obj.music_file }}"
-                               download
-                               class="mt-3 inline-block bg-black text-white px-4 py-2 rounded-lg">
-                                Download
-                            </a>
-                         <a href="/dashboard/music/{{ music.id }}"
-   class="mt-3 inline-block bg-black text-white px-4 py-2 rounded-lg">
-    view music
-</a>
-                             <p class="text-sm text-gray-400">
-   👁 {{ music.obj.views or 0 }} plays
-</p>
-
-<p class="text-sm text-gray-400">
-    ⬇️ {{ music.obj.downloads or 0 }} downloads
-</p>
-                        </div>
-
-                    </div>
-
-                    {% endfor %}
-
-                   </div>
-           </section>             
-            
-
-
-
-
-<!-- SCRIPTS -->
+<!-- ================= SLIDER RUNTIME ENGINE SCRIPT ================= -->
+<!-- ================= THE CORNERSTONE FRONTEND ENGINE SCRIPTS ================= -->
 <script>
-let currentSlide = 0;
-const heroSlider = document.getElementById("heroSlider");
+//  HIGH-PERFORMANCE ISOLATED HERO CAROUSEL ENGINE
+(function initializeHeroCarousel() {
+    let activeCarouselIndex = 0;
+    const trackingSliderTrackNode = document.getElementById("heroSlider");
+    
+    // Safety check: Exit cleanly if the slider elements do not exist on the current screen
+    if (!trackingSliderTrackNode) return;
+    
+    const aggregateSlidesCount = trackingSliderTrackNode.children.length;
+    if (aggregateSlidesCount <= 1) return; // No pagination required if there is only 1 article
 
-function moveSlide(dir) {
- if(!heroSlider) return;
-    const total = heroSlider.children.length;
-    currentSlide = (currentSlide + dir + total) % total;
-    heroSlider.style.transform = `translateX(-${currentSlide * 100}%)`;
-}
+    function executeTrackTransition() {
+        // Enforce smooth translation shift matrix directly onto your CSS engine track line
+        trackingSliderTrackNode.style.transform = `translateX(-${activeCarouselIndex * 100}%)`;
+    }
 
-setInterval(() => moveSlide(1), 5000);
+    // Expose explicit step transition controls to your public arrow buttons safely
+    window.moveSlider = function(directionStepValue) {
+        activeCarouselIndex += directionStepValue;
+        
+        // Circular loop reset boundary gates
+        if (activeCarouselIndex >= aggregateSlidesCount) {
+            activeCarouselIndex = 0;
+        } else if (activeCarouselIndex < 0) {
+            activeCarouselIndex = aggregateSlidesCount - 1;
+        }
+        executeTrackTransition();
+    };
 
-// NEWS SLIDER - touch/drag support for mobile
-let newsIndex = 0;
-const newsSlider = document.getElementById("newsSlider");
-let startX = 0;
+    // Initialize automated 5-second slide transitions cleanly within an isolated worker loop
+    setInterval(() => {
+        window.moveSlider(1);
+    }, 5000);
+})();
 
-if (newsSlider) {
-    newsSlider.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-    newsSlider.addEventListener('touchend', e => {
-        let diff = e.changedTouches[0].clientX - startX;
-        if (diff > 50) moveNews(-1);
-        if (diff < -50) moveNews(1);
-    });
-}
 
-function moveNews(step) {
-    const total = newsSlider.children.length;
-    const visible = window.innerWidth < 640? 1 : window.innerWidth < 1024? 2 : 3;
-    newsIndex = Math.max(0, Math.min(newsIndex + step, total - visible));
-    newsSlider.style.transform = `translateX(-${newsIndex * (100/visible)}%)`;
-}
+// 🚀 2. UNIFIED MULTI-CARD PUBLIC COMMENTS FORM ROUTING DELEGATE
+document.addEventListener("submit", async function handleDynamicFormSubmissions(eventEvent) {
+    const activeFormTarget = eventEvent.target;
+    
+    // Class delegate filter intercepts comments forms safely without individual ID conflicts
+    if (activeFormTarget && activeFormTarget.classList.contains("dynamic-comment-form") || activeFormTarget.classList.contains("dynamic-music-comment-form")) {
+        eventEvent.preventDefault(); // Hold back standard unheadered browser reload cycles
 
-// INFINITE SCROLL
-let page = 2;
-let loading = false;
-let stopLoading = false;
-
-window.addEventListener("scroll", async () => {
-
-    if (loading || stopLoading) return;
-
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-
-        loading = true;
-
-        try {
-            const res = await fetch(`/api/load-more?page=${page}`);
-
-            if (!res.ok) {
-                stopLoading = true;
-                return;
-            }
-
-            const data = await res.text();
-
-            if (data.trim() === "") {
-                stopLoading = true;
-                return;
-            }
-
-         document.querySelector("#feed-container")
-    .insertAdjacentHTML("beforeend", data);
-      page++;
-     } catch (err) {
-            console.log(err);
+        const tokenInputElement = activeFormTarget.querySelector('input[name="csrf_token"]');
+        if (!tokenInputElement || !tokenInputElement.value) {
+            alert("Security Error: Structural session CSRF verification data token missing.");
+            return;
         }
 
-        loading = false;
+        const tokenHashValue = tokenInputElement.value;
+        const compiledFormBuffer = new FormData(activeFormTarget);
+
+        try {
+            const networkResponse = await fetch(activeFormTarget.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": tokenHashValue // ✅ SATISFIES SECURE_CSRF_AND_HEADERS_MIDDLEWARE
+                },
+                body: compiledFormBuffer,
+                credentials: "include"
+            });
+
+            if (networkResponse.redirected) {
+                window.location.href = networkResponse.url;
+            } else if (networkResponse.ok) {
+                window.location.reload(); // Refresh the list structural components cleanly upon success
+            } else {
+                const errorMetadataPayload = await networkResponse.json().catch(() => ({}));
+                alert(errorMetadataPayload.detail || "Error: Failed to register public response comment.");
+            }
+        } catch (errException) {
+            console.error(errException);
+            alert("A localized network exception happened during data mutation streams.");
+        }
     }
 });
+
+
+// 🚀 3. THE INFINITE TIMELINE STREAM LOADER ENGINE (INTERSECTION OBSERVER)
+(function initializeInfiniteScrollTimeline() {
+    let currentFeedPageCounter = 1;
+    let isFeedCurrentlyStreaming = false;
+    let hasReachedEndOfStreamRecords = false;
+
+    const feedGridTargetNode = document.getElementById("feed-container");
+    const streamLoadingSpinnerNode = document.getElementById("feed-spinner-loader");
+    const scrollTrackingAnchorNode = document.getElementById("infinite-scroll-anchor");
+
+    if (!scrollTrackingAnchorNode || !feedGridTargetNode) return;
+
+    async function fetchNextStreamChunkSegment() {
+        if (isFeedCurrentlyStreaming || hasReachedEndOfStreamRecords) return;
+
+        isFeedCurrentlyStreaming = true;
+        if (streamLoadingSpinnerNode) streamLoadingSpinnerNode.classList.remove("hidden");
+        
+        currentFeedPageCounter += 1;
+
+        try {
+            const serverReply = await fetch(`/feed/stream?page=${currentFeedPageCounter}&limit=6`, {
+                method: "GET",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Accept": "application/json"
+                },
+                credentials: "include"
+            });
+
+            if (serverReply.ok) {
+                const htmlMarkupSnippetText = await serverReply.text();
+
+                if (!htmlMarkupSnippetText || htmlMarkupSnippetText.trim() === "") {
+                    hasReachedEndOfStreamRecords = true;
+                    scrollTrackingAnchorNode.innerHTML = "<p class='text-xs text-gray-400 font-semibold italic py-4 tracking-wide'>You have caught up with all updates.</p>";
+                    return;
+        }
+
+                feedGridTargetNode.insertAdjacentHTML("beforeend", htmlMarkupSnippetText);
+            } else {
+                hasReachedEndOfStreamRecords = true; // Block loop flooding on server failures
+            }
+        } catch (err) {
+            console.error("Feed fetch network issue: ", err);
+        } finally {
+            isFeedCurrentlyStreaming = false;
+            if (streamLoadingSpinnerNode) streamLoadingSpinnerNode.classList.add("hidden");
+        }
+    }
+
+    const streamObserverWrapper = new IntersectionObserver((entriesArray) => {
+        if (entriesArray[0].isIntersecting) {
+            fetchNextStreamChunkSegment();
+        }
+    }, {
+        root: null,
+        rootMargin: "150px", // Pull items 150px before screen encounter to retain smooth scrolling
+        threshold: 0.1
+    });
+
+    streamObserverWrapper.observe(scrollTrackingAnchorNode);
+})();
 </script>
 
 {% endblock %}

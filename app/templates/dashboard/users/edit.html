@@ -1,130 +1,96 @@
 {% extends "base.html" %}
-
 {% block content %}
-
 <div class="max-w-3xl mx-auto">
-
     <div class="bg-white rounded-2xl shadow p-8">
-
         <div class="mb-8">
-
-            <h1 class="text-3xl font-bold">
-                Edit User
-            </h1>
-
-            <p class="text-gray-500 mt-2">
-                Update user information
-            </p>
-
+            <h1 class="text-3xl font-bold">Edit User</h1>
+            <p class="text-gray-500 mt-2">Update user information</p>
         </div>
 
         {% if error %}
         <div class="bg-red-100 text-red-700 p-4 rounded-xl mb-6">
-            {{ error }}
+            {{ error|e }}
         </div>
         {% endif %}
 
-        <form
-            method="POST"
-            action="/auth/update/{{ user.id }}"
-            class="space-y-6"
-        >
+        <form id="userUpdateForm" method="POST" action="/auth/update/{{ user.id }}" class="space-y-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
             <!-- USERNAME -->
             <div>
-
-                <label class="block mb-2 font-semibold">
-                    Username
-                </label>
-
-                <input
-                    type="text"
-                    name="username"
-                    value="{{ user.username }}"
-                    required
-                    class="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-black"
-                >
-
+                <label class="block mb-2 font-semibold">Username</label>
+                <input type="text" name="username" value="{{ user.username|e }}" required
+                       class="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-black">
             </div>
 
             <!-- EMAIL -->
             <div>
-
-                <label class="block mb-2 font-semibold">
-                    Email
-                </label>
-
-                <input
-                    type="email"
-                    name="email"
-                    value="{{ user.email }}"
-                    required
-                    class="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-black"
-                >
-
+                <label class="block mb-2 font-semibold">Email</label>
+                <input type="email" name="email" value="{{ user.email|e }}" required
+                       class="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-black">
             </div>
 
             <!-- ADMIN -->
             <div class="flex items-center gap-3">
-
-                <input
-                    type="checkbox"
-                    name="is_admin"
-                    {% if user.is_admin %}checked{% endif %}
-                    class="w-5 h-5"
-                >
-
-                <label class="font-semibold">
-                    Admin Access
-                </label>
-
+                <input type="checkbox" name="is_admin" {% if user.is_admin %}checked{% endif %} class="w-5 h-5">
+                <label class="font-semibold">Admin Access</label>
             </div>
 
             <!-- ACTIVE -->
             <div class="flex items-center gap-3">
-             
-                <input
-                    type="checkbox"
-                    name="is_active"
-                    {% if user.is_active %}checked{% endif %}
-                    class="w-5 h-5"
-                >
-
-                <label class="font-semibold">
-                    Active User
-                </label>
+                <input type="checkbox" name="is_active" {% if user.is_active %}checked{% endif %} class="w-5 h-5">
+                <label class="font-semibold">Active User</label>
             </div>
-    <div> <label class="flex items-center gap-2">
-    <input type="checkbox"
-           name="is_super_admin"
-           {% if user.is_super_admin %}checked{% endif %}>
-    Super Admin
-</label>
+
+            <!-- SUPER ADMIN -->
+            <div>
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="is_super_admin" {% if user.is_super_admin %}checked{% endif %}>
+                    Super Admin
+                </label>
             </div>
 
             <!-- BUTTONS -->
             <div class="flex gap-4 pt-4">
-
-                <button
-                    type="submit"
-                    class="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800"
-                >
+                <button type="submit" class="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800">
                     Update User
                 </button>
-
-                <a
-                    href="/auth/user"
-                    class="bg-gray-200 px-6 py-3 rounded-xl hover:bg-gray-300"
-                >
+                <a href="/dashboard/users" class="bg-gray-200 px-6 py-3 rounded-xl hover:bg-gray-300">
                     Cancel
                 </a>
-
             </div>
-
         </form>
-
     </div>
-
 </div>
+<!-- ✅ PERFECTED USER EDIT SCRIPT FOR FORM DATA -->
+<script>
+document.getElementById("userUpdateForm").addEventListener("submit", async function(e) {
+    e.preventDefault(); // Hold back raw browser redirect action
+    
+    const form = e.target;
+    const token = form.querySelector('input[name="csrf_token"]').value;
+    
+    // Natively packages your text fields and checkboxes into a browser boundary map
+    const formData = new FormData(form);
+
+    const response = await fetch(form.action, {
+        method: "POST",
+        headers: {
+            "X-CSRF-Token": token  // 👈 Sends the key safely to main.py
+            // 💥 CRITICAL: DO NOT WRITE ANY "Content-Type" LINE HERE!
+        },
+        body: formData // Sends the clean multi-part body package seamlessly
+    });
+
+    if (response.redirected) {
+        window.location.href = response.url; // Route straight back to listings index cleanly on success
+    } else {
+        const text = await response.text();
+        document.open();
+        document.write(text);
+        document.close();
+    }
+});
+</script>
 
 {% endblock %}

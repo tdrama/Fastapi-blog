@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-4 md:p-8">
+    
+    <!-- PAGE TITLE HEADER -->
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Upload New Video</h1>
+            <p class="text-sm text-gray-500 mt-1">Publish a new multimedia asset to your feed directory</p>
+        </div>
+        <a href="/dashboard/videos" class="text-sm font-semibold text-blue-600 hover:underline">
+            ← Back to Library
+        </a>
+    </div>
+
+    <!-- CREATE VIDEO CONTAINER CARD LAYER -->
+    <div class="bg-white p-6 rounded-2xl shadow border max-w-4xl mx-auto">
+        <!-- FIXED: Added enctype and aligned target IDs for async processing -->
+        <form id="createVideoForm" method="POST" action="/dashboard/videos/create" enctype="multipart/form-data" class="space-y-6">
+            <!-- FIXED: Injects signed hash token parameters to prevent 403 Forbidden blocks -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <!-- ✅ FIXED: ADDED MISSING VIDEO TITLE INPUT FIELD -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Video Title <span class="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    name="title"
+                    required
+                    class="w-full border border-gray-300 rounded-xl p-3 bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm transition"
+                    placeholder="Enter an engaging title for this video asset"
+                >
+            </div>
+
+            <!-- VIDEO DESCRIPTION (OPTIONAL FIELDS INJECTION) -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Description / Content Summary
+                </label>
+                <textarea
+                    name="description"
+                    rows="4"
+                    class="w-full border border-gray-300 rounded-xl p-3 bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm transition resize-none"
+                    placeholder="Provide a brief summary or notes regarding this video..."
+                ></textarea>
+            </div>
+
+            <!-- CATEGORY SELECTION DROPDOWN -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
+                <select name="category_id" required class="w-full border border-gray-300 rounded-xl p-3 bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <option value="" disabled selected>Select a category</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name | e }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- VIDEO UPLOAD MODULE -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Video File <span class="text-red-500">*</span>
+                </label>
+                <label for="video-upload" class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:bg-gray-50 hover:border-blue-500 transition bg-white relative">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                        <svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        <p class="mb-1 text-sm text-gray-500">
+                            <span class="font-semibold text-blue-600">Click to upload</span> or drag and drop
+                        </p>
+                        <p class="text-xs text-gray-400">MP4, MOV, WEBM up to 500MB</p>
+                    </div>
+                    <!-- FIXED KEY NAME: Changed name="video" to name="video_file" to match your backend exactly -->
+                    <input id="video-upload" name="video_file" type="file" accept="video/*" required class="hidden" onchange="displaySelectedFilename(this)">
+                </label>
+                <!-- Visual placeholder element to output file confirmation metadata strings -->
+                <p id="video-file-name" class="mt-2 text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded-xl inline-block font-medium border border-blue-100 hidden"></p>
+            </div>
+
+            <!-- THUMBNAIL IMAGE UPLOAD MODULE -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Thumbnail Artwork Cover
+                </label>
+                <input
+                    type="file"
+                    name="thumbnail"
+                    accept="image/*"
+                    class="w-full text-sm text-gray-500 bg-white border rounded-xl file:mr-4 file:py-2.5 file:px-4 file:rounded-l-xl file:border-0 file:text-xs file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-800 transition cursor-pointer"
+                >
+                <p class="mt-1.5 text-xs text-gray-400 leading-normal">Supported formats: JPG, PNG, WEBP. A generic preview fallback state is auto-assigned if left empty.</p>
+            </div>
+
+            <!-- FORM BUTTON CONTROLS ACCORDIAN -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                <button
+                    type="submit"
+                    class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow"
+                >
+                    Upload Video Asset
+                </button>
+                <a
+                    href="/dashboard/videos"
+                    class="w-full sm:w-auto px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl text-center transition"
+                >
+                    Cancel Modification
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= ASYNCHRONOUS SECURITY MULTI-PART COOKIE HEADER INTERCEPTOR ================= -->
+<script>
+// 1. FILE SELECTION DECORATOR INDICATOR HELPER
+function displaySelectedFilename(inputElement) {
+    const feedbackNode = document.getElementById("video-file-name");
+    if (inputElement.files && inputElement.files[0]) {
+        feedbackNode.textContent = `Selected file: ${inputElement.files[0].name}`;
+        feedbackNode.classList.remove("hidden");
+    } else {
+        feedbackNode.classList.add("hidden");
+    }
+}
+
+// 2. REFRESHLESS REJECTION-PROOF MEDIA ROUTER HANDLER
+const uploadForm = document.getElementById("createVideoForm");
+if (uploadForm) {
+    uploadForm.addEventListener("submit", async function(e) {
+        e.preventDefault(); // Suspend standard unheadered navigation loops
+
+        const form = e.target;
+        const tokenInput = form.querySelector('input[name="csrf_token"]');
+        if (!tokenInput || !tokenInput.value) {
+            alert("Security Error: CSRF token verification metrics missing.");
+            return;
+        }
+
+        const token = tokenInput.value;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token // ✅ SATISFIES SECURE_CSRF_AND_HEADERS_MIDDLEWARE IN MAIN.PY
+                },
+                body: formData,
+                credentials: "include" // ✅ FORCES BROWSER TO ATTACH ALL ACTIVE SESSION COOKIES
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else if (response.ok) {
+                window.location.href = "/dashboard/videos"; // Clear back to lists layout upon upload success
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Failed to process video file upload stream.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A transmission network exception occurred during file processing.");
+        }
+    });
+}
+</script>
+{% endblock %}

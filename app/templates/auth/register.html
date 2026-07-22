@@ -1,62 +1,105 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Register</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
+{% extends "base.html" %}
 
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
 
-<form
-    method="POST"
-    action="/auth/register"
-enctype="multipart/form-data"
-    class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md"
->
+    <!-- ✅ FIXED DETAILS: Includes error box layout to catch "Email already exists" logs safely -->
+    <div class="w-full max-w-md">
+        {% if error %}
+        <div class="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-center font-medium shadow-sm">
+            {{ error }}
+        </div>
+        {% endif %}
 
-    <h1 class="text-3xl font-bold mb-6 text-center">
-        Register
-    </h1>
+        <form
+            id="registerForm"
+            method="POST"
+            action="/auth/register"
+            enctype="multipart/form-data"
+            class="bg-white p-8 rounded-xl shadow-lg w-full"
+        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-    <input
-        type="text"
-        name="username"
-        placeholder="Username"
-        class="w-full border p-3 rounded mb-4"
-    >
+            <h1 class="text-3xl font-bold mb-6 text-center">
+                Register
+            </h1>
 
-    <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        class="w-full border p-3 rounded mb-4"
-    >
+            <input
+                type="text"
+                name="username"
+                placeholder="Username"
+                required
+                class="w-full border p-3 rounded mb-4 focus:ring-2 focus:ring-green-600 outline-none"
+            >
 
-    <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        class="w-full border p-3 rounded mb-4"
-    >
+            <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                required
+                class="w-full border p-3 rounded mb-4 focus:ring-2 focus:ring-green-600 outline-none"
+            >
 
-    <label class="block mb-2 text-sm font-medium">
-        Profile Image
-    </label>
+            <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+                class="w-full border p-3 rounded mb-4 focus:ring-2 focus:ring-green-600 outline-none"
+            >
 
-    <input
-        type="file"
-        name="profile_image"
-        accept="image/*"
-        class="w-full border border-gray-300 rounded-lg p-3"
-    >
+            <label class="block mb-2 text-sm font-medium text-gray-700">
+                Profile Image
+            </label>
 
-    <button
-        class="w-full bg-green-600 text-white p-3 rounded"
-    >
-        Register
-    </button>
+            <input
+                type="file"
+                name="profile_image"
+                accept="image/*"
+                class="w-full border border-gray-300 rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+            >
 
-</form>
+            <button
+                type="submit"
+                class="w-full bg-green-600 hover:bg-green-700 transition-colors text-white font-bold p-3 rounded mt-4"
+            >
+                Register
+            </button>
 
-</body>
-</html>
+        </form>
+    </div>
+
+</div>
+
+<!-- ✅ PERFECTED FRONTEND TOKEN HANDLER FOR MULTIPART FILES -->
+<script>
+document.getElementById("registerForm").addEventListener("submit", async function(e) {
+    e.preventDefault(); // Hold back default browser action to append headers securely
+    
+    const form = e.target;
+    const token = form.querySelector('input[name="csrf_token"]').value;
+    
+    // 💥 AUTOMATED CORRECTIONS: FormData reads input name fields natively!
+    // No explicit getElementById lookups needed. This safely processes your profile_image data block too!
+    const formData = new FormData(form);
+
+    const response = await fetch(form.action, {
+        method: "POST",
+        headers: {
+            "X-CSRF-Token": token  // Sends token straight to your clean main.py middleware header check
+        },
+        body: formData // Sends full multipart content type package seamlessly
+    });
+
+    if (response.redirected) {
+        window.location.href = response.url; // Route cleanly straight to /auth/login upon success
+    } else {
+        // If username or email exists, refresh the document block to render the error alert string cleanly
+        const text = await response.text();
+        document.open();
+        document.write(text);
+        document.close();
+    }
+});
+</script>
+{% endblock %}

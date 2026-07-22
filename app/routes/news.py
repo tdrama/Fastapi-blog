@@ -11,11 +11,10 @@ from fastapi import (
 
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-
+from werkzeug.utils import secure_filename
 from sqlalchemy.orm import Session, joinedload
-
 from slugify import slugify
-
+import secrets
 import os
 import shutil
 import hashlib
@@ -71,43 +70,61 @@ def generate_file_hash(file):
 
     return hasher.hexdigest()
 
-
-# ====================================================
-# DASHBOARD NEWS LIST
-# ====================================================
 @router.get("/dashboard/news")
 def news_page(
     request: Request,
-    page: int = 1,
     db: Session = Depends(get_db)
 ):
 
-    per_page = 10
+    # 1. Extract current page parameter safely out of the browser URL query state
+    try:
+        page = int(request.query_params.get("page", 1))
+        if page < 1:
+            page = 1
+    except (ValueError, TypeError):
+        page = 1
 
-    total = db.query(News).count()
+    per_page = 10  # Enforce matching limit constraints per list view frame
+    offset = (page - 1) * per_page
 
-    news = (
+    # 2. Query matching slice maps pre-loaded with category relational mappings
+    news_list = (
         db.query(News)
+        .options(joinedload(News.category))
         .order_by(News.id.desc())
-        .offset((page - 1) * per_page)
+        .offset(offset)
         .limit(per_page)
         .all()
     )
 
-    total_pages = (total + per_page - 1) // per_page
-
+    # 3. Aggregate tracking parameters metric metrics
+    total_news = db.query(News).count()
     categories = db.query(Category).all()
 
-    return templates.TemplateResponse(
-        "dashboard/news/index.html",
-        {
-            "request": request,
-            "news": news,
+    total_pages = (total_news + per_page - 1) // per_page
+    if total_pages < 1:
+        total_pages = 1
+        
+    has_prev = page > 1
+    has_next = page < total_pages
+
+    # ✅ PERFECT JINJA2 KEYWORDS: Explicitly named parameters pass structural token pipelines
+    return request.app.state.render_with_csrf(
+        templates_instance=templates,
+        request=request,
+        template_name="dashboard/news/index.html",
+        context={
+            "news": news_list,
             "categories": categories,
             "page": page,
+            "has_prev": has_prev,
+            "has_next": has_next,
+            "prev_page": page - 1,
+            "next_page": page + 1,
             "total_pages": total_pages
         }
     )
+
 # ====================================================
 # CREATE PAGE
 # ====================================================
@@ -116,30 +133,39 @@ def create_page(request: Request,db: Session = Depends(get_db)
  ):
 
     categories = db.query(Category).all()
-
-    return templates.TemplateResponse(
-        "dashboard/news/create.html",
-        {
-            "request": request,
+    return request.app.state.render_with_csrf(
+        templates_instance=templates,
+        request=request,
+        template_name="dashboard/news/create.html",
+        context={
             "categories": categories
         }
     )
-
-
 # ====================================================
 # CREATE NEWS
 # ====================================================
+
 @router.post("/dashboard/news/create")
-def create_news(
+async def create_news_article(
     request: Request,
-    background_tasks: BackgroundTasks,
-    title: str = Form(...),
-    content: str = Form(...),
-    category_id: str = Form(...),
-    tags: str = Form(None),
-    image: UploadFile = File(None),
     db: Session = Depends(get_db)
 ):
+    # SECURITY HANDLED: Global middleware loops already checked header validation parameters!
+    
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Login required")
+
+    # Extract text strings and binary image files safely out of the form data state cache
+    form_data = await request.form()
+    title = form_data.get("title")
+    category_id_raw = form_data.get("category_id")
+    content = form_data.get("content") # 👈 TinyMCE content parses smoothly as structured raw HTML strings here
+
+    if not title or not content or not category_id_raw:
+        raise HTTPException(status_code=400, detail="Missing required field property keys")
+
+    # Proceed with saving your data variables straight into your SQL model parameters blocks...
 
     slug = slugify(title)
 
@@ -155,8 +181,8 @@ def create_news(
 
     # ---------------- IMAGE UPLOAD ----------------
     if image and image.filename:
-
-        ext = os.path.splitext(image.filename)[1].lower()
+        safe_name = secure_filename(image.filename)
+        ext = os.path.splitext(safe_name)[1].lower()
 
         if ext not in ALLOWED_IMAGES:
             raise HTTPException(status_code=400, detail="Invalid image format")
@@ -172,9 +198,9 @@ def create_news(
 
         image.file.seek(0)
 
-        filename = f"{uuid4()}_{image.filename}"
-        file_path = f"{UPLOAD_DIR}/{filename}"
-
+     
+        filename = f"{uuid4()}{ext}"
+        file_path = os.path.join(UPLOAD_DIR, filename)
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
 
@@ -237,24 +263,24 @@ def edit_news_page(news_id: int, request: Request, db: Session = Depends(get_db)
 
     if not news:
         raise HTTPException(status_code=404, detail="News not found")
- 
+
     categories = db.query(Category).all()
-    return templates.TemplateResponse(
-        "dashboard/news/edit.html",
-        {
-            "request": request,
+    return request.app.state.render_with_csrf(
+        templates_instance=templates,
+        request=request,
+        template_name="dashboard/news/edit.html",
+        context={
             "news": news,
             "categories": categories
         }
     )
-
-
 # ====================================================
 # UPDATE NEWS
 # ====================================================
 @router.post("/dashboard/news/update/{news_id}")
-def update_news(
+async def update_news(
     news_id: int,
+    request: Request,
     title: str = Form(...),
     content: str = Form(...),
     category_id: int = Form(...),
@@ -263,6 +289,11 @@ def update_news(
     db: Session = Depends(get_db)
 ):
 
+
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise HTTPException(401, "Login required")
+
     news = db.query(News).filter(News.id == news_id).first()
 
     if not news:
@@ -270,13 +301,13 @@ def update_news(
 
     news.title = title
     news.slug = slugify(title)
-    news.content = content
+    news.content = sanitize_html(content)
     news.category_id = category_id
     news.tags = tags
 
     if image and image.filename:
-
-        ext = os.path.splitext(image.filename)[1].lower()
+        safe_name = secure_filename(image.filename)
+        ext = os.path.splitext(safe_name)[1].lower()
 
         if ext not in ALLOWED_IMAGES:
             raise HTTPException(status_code=400, detail="Invalid image format")
@@ -287,8 +318,7 @@ def update_news(
                 os.remove(old_file)
 
         image.file.seek(0)
-
-        filename = f"{uuid4()}_{image.filename}"
+        filename = f"{uuid4()}{ext}"
         file_path = f"{UPLOAD_DIR}/{filename}"
 
         with open(file_path, "wb") as buffer:
@@ -305,8 +335,8 @@ def update_news(
 # ====================================================
 # DELETE NEWS
 # ====================================================
-@router.get("/dashboard/news/delete/{news_id}")
-def delete_news(news_id: int, db: Session = Depends(get_db)):
+@router.post("/dashboard/news/delete/{news_id}")
+def delete_news(news_id: int,request:Request, db: Session = Depends(get_db)):
 
     news = db.query(News).filter(News.id == news_id).first()
 
@@ -335,11 +365,11 @@ def frontend_news(request: Request, db: Session = Depends(get_db)):
         .filter(News.is_published == True)\
         .order_by(News.id.desc())\
         .all()
-
-    return templates.TemplateResponse(
-        "frontend/news.html",
-        {
-            "request": request,
+    return request.app.state.render_with_csrf(
+        templates_instance=templates,
+        request=request,
+        template_name="frontend/news.html",
+        context={
             "news": news
         }
     )
@@ -361,22 +391,22 @@ def news_detail(slug: str, request: Request, db: Session = Depends(get_db)):
 
     news.views = (news.views or 0) + 1
     db.commit()
-
-    return templates.TemplateResponse(
-        "frontend/news_detail.html",
-        {
-            "request": request,
+    return request.app.state.render_with_csrf(
+        templates_instance=templates,
+        request=request,
+        template_name="frontend/news_detail.html",
+        context={
             "news": news
         }
     )
-
 
 # ====================================================
 # ADD COMMENT
 # ====================================================
 @router.post("/news/{news_id}/comment")
-def add_news_comment(
+async def add_news_comment(
     news_id: int,
+    request: Request,
     name: str = Form(...),
     content: str = Form(...),
     db: Session = Depends(get_db)

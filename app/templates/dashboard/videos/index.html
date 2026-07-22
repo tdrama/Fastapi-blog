@@ -1,127 +1,180 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="p-6 space-y-6">
 
-<div class="p-4 md:p-8">
+    <!-- HEADER BLOCK -->
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+        <h1 class="text-3xl font-bold">Video Management</h1>
 
-    <div class="flex justify-between items-center mb-8">
-
-        <div>
-            <h1 class="text-3xl font-bold">Video Management</h1>
-            <p class="text-gray-500">Manage uploaded videos</p>
-        </div>
-
-        <a href="/dashboard" class="bg-black text-white px-5 py-3 rounded-xl">
-            Dashboard
+        <a href="/dashboard/videos/create"
+           class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg transition">
+            + Add Video
         </a>
-
     </div>
 
-    <!-- UPLOAD FORM -->
-    <div class="bg-white shadow rounded-2xl p-6 mb-10">
+    <!-- MAIN DATA TABLE PANEL CARD -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+        
+        <!-- WRAPPER FOR HORIZONTAL COMPATIBILITY SCROLLING -->
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="p-4 text-left font-semibold">Thumbnail</th>
+                        <th class="p-4 text-left font-semibold">Title</th>
+                        <th class="p-4 text-left font-semibold">Category</th>
+                        <th class="p-4 text-left font-semibold">Views</th>
+                        <th class="p-4 text-left font-semibold">Created</th>
+                        <th class="p-4 text-center font-semibold">Actions</th>
+                    </tr>
+                </thead>
 
-        <form action="videos/create" method="POST" enctype="multipart/form-data" class="space-y-5">
-
-            <input type="text" name="title" placeholder="Video title"
-                   class="w-full border p-3 rounded-xl" required>
-
-            <textarea name="description" placeholder="Description"
-                      class="w-full border p-3 rounded-xl h-32"></textarea>
-             <!-- CATEGORY DROPDOWN -->
-    <select name="category_id"
-            required
-            class="w-full border p-3 rounded-xl">
-
-        <option value="" disabled selected>Select Category</option>
-
-        {% for cat in categories %}
-            <option value="{{ cat.id }}">
-                {{ cat.name }}
-            </option>
-        {% endfor %}
-
-    </select>
-            <input type="file" name="video" accept="video/*"
-                   class="w-full border p-3 rounded-xl" required>
-
-            <button class="bg-blue-600 text-white px-6 py-3 rounded-xl">
-                Upload Video
-            </button>
-
-        </form>
-
-    </div>
-
-    <!-- VIDEO LIST -->
-    <div class="overflow-x-auto bg-white rounded-2xl shadow">
-
-        <table class="w-full">
-
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="p-3 text-left">Title</th>
-                    <th class="p-3 text-left">Video</th>
-                   <th class="p-4 text-left">
-                        Views
-                    </th>
-
-                    <th class="p-4 text-left">
-                        Created
-                    </th>
-
-                    <th class="p-3 text-left">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-            {% for video in videos %}
-
-                <tr class="border-t">
-
-                    <td class="p-3">{{ video.title }}</td>
-
+                <tbody>
+                {% for video in videos %}
+                <tr class="border-t hover:bg-gray-50 transition">
+                    <!-- VIDEO PREVIEW CELL -->
                     <td class="p-3">
-                        <video width="150" controls>
-                            <source src="{{ video.video_file }}">
+                        <video controls class="w-40 h-24 object-cover rounded-lg bg-black" preload="metadata">
+                            {% if video.video_file.startswith('/static') or video.video_file.startswith('http') %}
+                                <source src="{{ video.video_file }}" type="video/mp4">
+                            {% else %}
+                                <source src="/static/uploads/{{ video.video_file }}" type="video/mp4">
+                            {% endif %}
+                            Your browser does not support HTML video.
                         </video>
                     </td>
-                   <td class="p-4">
-                   {{ video.category.name }}
-          </td>
 
-                   <td class="p-4">
+                    <!-- TITLE -->
+                    <td class="p-4 font-medium text-gray-900">
+                        {{ video.title }}
+                    </td>
+
+                    <!-- CATEGORY RELATION STRING -->
+                    <td class="p-4 text-gray-600">
+                        {{ video.category.name if video.category else 'None' }}
+                    </td>
+
+                    <!-- VIEWS METRIC COUNTER -->
+                    <td class="p-4 text-gray-600">
                         {{ video.views }}
                     </td>
 
-                    <td class="p-4">
-                        {{ video.created_at }}
+                    <!-- TIMESTAMP STRFTIME FORMATTING -->
+                    <td class="p-4 text-gray-500 text-sm">
+                        {{ video.created_at.strftime('%Y-%m-%d') if video.created_at else '' }}
                     </td>
 
-                    <td class="p-3 flex gap-2">
+                    <!-- ACTIONS ROW CONTROLS CELL -->
+                    <td class="p-4 text-center">
+                        <div class="flex gap-2 justify-center items-center">
+                            <!-- EDIT PORTAL LINK BUTTON -->
+                            <a href="/dashboard/videos/edit/{{ video.id }}"
+                               class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded transition text-sm font-medium">
+                               Edit
+                            </a>
 
-                        <a href="/dashboard/videos/edit/{{ video.id }}"
-                           class="bg-red-600 text-white px-3 py-1 rounded-lg">
-                            Edit
-                        </a>
-
-                        <a href="/dashboard/videos/delete/{{ video.id }}"
-                           class="bg-red-600 text-white px-3 py-1 rounded-lg">
-                            Delete
-                        </a>
-
+                            <!-- SECURE DELETE POST UTILITY FORM CONTAINER -->
+                            <form class="delete-video-form" action="/dashboard/videos/delete/{{ video.id }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <button type="submit"
+                                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded transition text-sm font-medium cursor-pointer">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
                     </td>
-
                 </tr>
+                {% endfor %}
+                {% if not videos %}
+                <tr>
+                    <td colspan="6" class="p-8 text-center text-gray-500 bg-gray-50">
+                        No videos registered in this data segment view panel.
+                    </td>
+                </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
 
-            {% endfor %}
+        <!-- 🛡️ FIXED INTEGRATED VIDEO PAGINATION CONTROLS PANEL CARD FOOTER -->
+        <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
+            <span class="text-sm text-gray-600">
+                Page <span class="font-semibold text-black">{{ page if page else 1 }}</span> of <span class="font-semibold text-black">{{ total_pages if total_pages > 0 else 1 }}</span>
+            </span>
 
-            </tbody>
+            <div class="flex gap-2">
+                <!-- PREVIOUS SLICE SWITCH LINK ACTION -->
+                {% if has_prev %}
+                <a href="/dashboard/videos?page={{ prev_page }}"
+                   class="px-4 py-2 border bg-white text-gray-800 rounded-xl hover:bg-gray-100 font-medium text-sm transition shadow-sm">
+                    ← Previous
+                </a>
+                {% else %}
+                <button disabled
+                        class="px-4 py-2 border bg-gray-100 text-gray-400 rounded-xl font-medium text-sm cursor-not-allowed">
+                    ← Previous
+                </button>
+                {% endif %}
 
-        </table>
+                <!-- NEXT SLICE SWITCH LINK ACTION -->
+                {% if has_next %}
+                <a href="/dashboard/videos?page={{ next_page }}"
+                   class="px-4 py-2 border bg-white text-gray-800 rounded-xl hover:bg-gray-100 font-medium text-sm transition shadow-sm">
+                    Next →
+                </a>
+                {% else %}
+                <button disabled
+                        class="px-4 py-2 border bg-gray-100 text-gray-400 rounded-xl font-medium text-sm cursor-not-allowed">
+                    Next →
+                </button>
+                {% endif %}
+            </div>
+        </div>
 
-    </div>
+    </div> <!-- ✅ FIXED: Closes main data table panel card container explicitly -->
 
-</div>
+</div> <!-- Closes outer p-6 grid container wrapper -->
 
+<!-- ✅ ASYNCHRONOUS SECURE HEADER HANDLING OPERATIONS CONTROLLER ENGINE -->
+<script>
+document.querySelectorAll(".delete-video-form").forEach(form => {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault(); // Suspend standard raw un-headered form navigation loops
+
+        // Confirmation guard checking is evaluated cleanly before executing pipeline calls
+        if (!confirm("Are you sure you want to permanently delete this video track file off storage disk arrays?")) {
+            return;
+        }
+
+        const currentForm = e.target;
+        const token = currentForm.querySelector('input[name="csrf_token"]').value;
+        const formData = new FormData(currentForm);
+
+        try {
+            const response = await fetch(currentForm.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token // Transmits verified cross-origin token straight to main.py loop
+                },
+                body: formData,
+                credentials: "include"
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url; // Intercept and map redirection locations smoothly upon execution
+            } else if (response.ok) {
+                // Instantly remove the entry row segment cleanly from DOM tree viewport without forcing full layout reloads
+                currentForm.closest("tr").remove();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Unable to remove video properties securely from server array.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A transmission block or network execution error occurred during removal pipeline parsing.");
+        }
+    });
+});
+</script>
 {% endblock %}

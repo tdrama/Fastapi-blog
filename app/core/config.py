@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Blog Project"
 
     DEBUG: bool = True
+    ENV: str = "development"
 
     DATABASE_URL: str = "sqlite:///./blog.db"
 
@@ -33,5 +34,7 @@ class Settings(BaseSettings):
 
     EMAIL_ADDRESS: str = "bamtboie@gmail.com"
     EMAIL_PASSWORD: str = "sflgcbalerbkrjka"
-
+    class Config:
+        env_file=".env"
+        extra="ignore"
 settings = Settings()

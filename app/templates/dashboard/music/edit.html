@@ -1,95 +1,118 @@
 {% extends "base.html" %}
-
 {% block content %}
-
 <div class="p-6">
+    <a href="/dashboard" class="bg-black text-white px-4 py-2 rounded">Dashboard</a>
 
-              <a href="/dashboard"
-                 class="bg-black text-white px-4 py-2 rounded">
-                  Dashboard
-           </a>
     <div class="flex justify-between items-center mb-6">
-
-        <h1 class="text-3xl font-bold">
-            Edit Music
-        </h1>
-
-        <a href="/music"
-           class="bg-black text-white px-4 py-2 rounded">
-            Back
-        </a>
-
+        <h1 class="text-3xl font-bold">Edit Music</h1>
+        <a href="/music" class="bg-black text-white px-4 py-2 rounded">Back</a>
     </div>
 
     <div class="bg-white p-6 rounded-xl shadow">
-
-        <!--<form action="/dashboard/music/update/{{ music.id }}"-->
-     <form action="{{ url_for('update_music', music_id=music.id) }}"         method="POST"
+        <form id="editMusicForm"  action="{{ url_for('update_music', music_id=music.id) }}" 
+              method="POST"
               enctype="multipart/form-data"
               class="space-y-5">
+              
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
             <!-- TITLE -->
-            <input type="text"
-                   name="title"
-                   value="{{ music.title }}"
+            <input type="text" 
+                   name="title" 
+                   value="{{ music.title|e }}"
                    class="w-full border p-3 rounded"
-                   require>
+                   required>
 
             <!-- ARTIST -->
             <input type="text"
                    name="artist"
-                   value="{{ music.artist }}"
-                   class="w-full border p-3 rounded"require>
-
+                   value="{{ music.artist|e }}"
+                   class="w-full border p-3 rounded"
+                   required>
+              <!-- CATEGORY SELECTOR (🔑 FIXED: Added missing required category field) -->
+            <div>
+                <label class="block mb-1 font-medium">Category</label>
+                <select name="category_id" class="w-full border p-3 rounded" required>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if cat.id == music.category_id %}selected{% endif %}>
+                            {{ cat.name|e }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
             <!-- DESCRIPTION -->
             <textarea name="description"
-                      class="w-full border p-3 rounded h-32"
-                      >{{ music.description }}</textarea>
+                      class="w-full border p-3 rounded h-32">{{ music.description|e }}</textarea>
 
             <!-- CURRENT COVER -->
             <div>
-
                 <p class="font-semibold mb-2">Current Cover</p>
-
                 {% if music.cover_image %}
-                    <img src="{{ music.cover_image }}"
-                         class="w-32 h-32 object-cover rounded">
+                    <img src="{{ url_for('static', path='uploads/' ~ music.cover_image) }}" class="w-32 h-32 object-cover rounded" alt="Cover">
                 {% else %}
                     <p>No cover image</p>
                 {% endif %}
-
             </div>
 
             <!-- NEW COVER -->
-            <input type="file"
-                   name="cover_image"
-                   class="w-full border p-3 rounded">
+            <div>
+                <label class="block mb-1 font-medium">New Cover Image</label>
+                <input type="file" name="cover_image" accept="image/*" class="w-full border p-3 rounded">
+            </div>
 
             <!-- CURRENT AUDIO -->
             <div>
-
                 <p class="font-semibold mb-2">Current Audio</p>
-
                 <audio controls class="w-full">
-                    <source src="{{ music.music_file }}">
+                    <source src="{{url_for('static', path='uploads/' ~ music.music_file) }}">
                 </audio>
-
             </div>
 
+
             <!-- NEW AUDIO -->
-            <input type="file"
-                   name="music"
-                   class="w-full border p-3 rounded">
+            <div>
+                <label class="block mb-1 font-medium">New Audio File</label>
+                <input type="file" name="music_file" accept="audio/*" class="w-full border p-3 rounded">
+            </div>
 
             <!-- BUTTON -->
-            <button class="bg-green-600 text-white px-5 py-3 rounded">
+            <button class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded">
                 Update Music
             </button>
-
         </form>
-
     </div>
-
 </div>
+<script>
+const editMusicForm = document.getElementById("editMusicForm");
+
+editMusicForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const formData = new FormData(editMusicForm);
+    const csrfToken = formData.get("csrf_token");
+
+    try {
+        const res = await fetch(editMusicForm.action, {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRF-Token": csrfToken
+            },
+            credentials: "include"
+        });
+
+        if (res.redirected) {
+            window.location.href = res.url;
+        } else if (res.ok) {
+            window.location.href = "/dashboard/music"; // Redirect back to music dash on success
+        } else {
+            const data = await res.json();
+            alert(data.detail || "Failed to update music");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("An error occurred while updating the music entry");
+    }
+});
+</script>
 
 {% endblock %}

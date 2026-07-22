@@ -1,104 +1,120 @@
-
 {% extends "base.html" %}
-
 {% block content %}
-
 <div class="p-4 md:p-8">
-
     <div class="flex justify-between items-center mb-8">
-
         <div>
-
-            <h1 class="text-3xl font-bold">
-                Subscribers
-            </h1>
-
-            <p class="text-gray-500">
-                Email subscribers management
-            </p>
-
+            <h1 class="text-3xl font-bold">Subscribers</h1>
+            <p class="text-gray-500">Email subscribers management</p>
         </div>
-
-        <a
-            href="/dashboard"
-            class="bg-black text-white px-5 py-3 rounded-xl"
-        >
-            Dashboard
-        </a>
-
+        <a href="/dashboard" class="bg-black text-white px-5 py-3 rounded-xl">Dashboard</a>
     </div>
-
 
     <!-- SUBSCRIBERS TABLE -->
-
     <div class="overflow-x-auto bg-white rounded-2xl shadow">
-
         <table class="w-full">
-
             <thead class="bg-gray-100">
-
                 <tr>
-
-                    <th class="p-4 text-left">
-                        ID
-                    </th>
-
-                    <th class="p-4 text-left">
-                        Email
-                    </th>
-
-                    <th class="p-4 text-left">
-                        Subscribed At
-                    </th>
-
-                    <th class="p-4 text-left">
-                        Actions
-                    </th>
-
+                    <th class="p-4 text-left">ID</th>
+                    <th class="p-4 text-left">Email</th>
+                    <th class="p-4 text-left">Subscribed At</th>
+                    <th class="p-4 text-left">Actions</th>
                 </tr>
-
             </thead>
-
             <tbody>
-
                 {% for subscriber in subscribers %}
-
                 <tr class="border-t">
-
+                    <td class="p-4">{{ subscriber.id }}</td>
+                    <td class="p-4">{{ subscriber.email|e }}</td>
                     <td class="p-4">
-                        {{ subscriber.id }}
+                        {{ subscriber.subscribed_at.strftime('%d %b %Y %H:%M') if subscriber.subscribed_at }}
                     </td>
-
                     <td class="p-4">
-                        {{ subscriber.email }}
+                        <!-- ✅ OPTIMIZED: Replaced inline onsubmit with class="delete-subscriber-form" target -->
+                        <form method="post" action="/subscribers/delete/{{ subscriber.id }}" class="inline delete-subscriber-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
+                                Delete
+                            </button>
+                        </form>
                     </td>
-
-                    <td class="p-4">
-                        
-{{ subscriber.subscribed_at.strftime('%d %b %Y %H:%M') }}
-                    </td>
-
-                    <td class="p-4">
-
-                        <a
-                            href="/subscribers/delete/{{ subscriber.id }}"
-                            class="bg-red-500 text-white px-3 py-2 rounded-lg"
-                        >
-                            Delete
-                        </a>
-
-                    </td>
-
                 </tr>
-
                 {% endfor %}
-
             </tbody>
-
         </table>
-
     </div>
+     <!-- 🛡️ INTEGRATED SECURE ALIGNED PAGINATION CONTROL PANEL FOOTER -->
+        <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
+            <span class="text-sm text-gray-600">
+                Page <span class="font-semibold text-black">{{ page if page else 1 }}</span> of <span class="font-semibold text-black">{{ total_pages if total_pages > 0 else 1 }}</span>
+            </span>
 
+            <div class="flex gap-2">
+                <!-- PREVIOUS TRIGGER BUTTON -->
+                {% if has_prev %}
+                <a href="/dashboard/subscribers?page={{ prev_page }}" class="px-4 py-2 border bg-white text-gray-800 rounded-xl hover:bg-gray-100 font-medium text-sm transition shadow-sm">
+                    ← Previous
+                </a>
+                {% else %}
+                <button disabled class="px-4 py-2 border bg-gray-100 text-gray-400 rounded-xl font-medium text-sm cursor-not-allowed">
+                    ← Previous
+                </button>
+                {% endif %}
+
+                <!-- NEXT TRIGGER BUTTON -->
+                {% if has_next %}
+                <a href="/dashboard/subscribers?page={{ next_page }}" class="px-4 py-2 border bg-white text-gray-800 rounded-xl hover:bg-gray-100 font-medium text-sm transition shadow-sm">
+                    Next →
+                </a>
+                {% else %}
+                <button disabled class="px-4 py-2 border bg-gray-100 text-gray-400 rounded-xl font-medium text-sm cursor-not-allowed">
+                    Next →
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+    </div> <!-- Closes main panel card card wrapper container -->
+</div>
 </div>
 
+<!-- ✅ PERFECTED ROW REMOVAL ENGINE BLOCK -->
+<script>
+document.querySelectorAll(".delete-subscriber-form").forEach(form => {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault(); // Intercept browser navigation loops
+
+        if (!confirm("Are you sure you want to permanently delete this subscriber?")) {
+            return;
+        }
+
+        const targetForm = e.target;
+        const token = targetForm.querySelector('input[name="csrf_token"]').value;
+        const formData = new FormData(targetForm);
+
+        try {
+            const response = await fetch(targetForm.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token // Secure bridge straight to your middleware
+                },
+                body: formData,
+                credentials: "include"
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url; // Route back to specific listings if issued
+            } else if (response.ok) {
+                // Instantly remove the row block directly out of view layout structures
+                targetForm.closest("tr").remove();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Failed to process subscriber deletion request.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A transmission exception occurred while removing this record.");
+        }
+    });
+});
+</script>
 {% endblock %}

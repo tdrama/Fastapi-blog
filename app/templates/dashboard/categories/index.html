@@ -1,118 +1,186 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto p-4 md:p-8">
+<div class="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
 
-    <div class="flex flex-col md:flex-row md:justify-between items-center">
-
-        <h1 class="text-2xl font-bold">
-            Categories
-        </h1>
-
-        <a href="/dashboard"
-           class="bg-black text-white hover:bg-gray-800 px-4 py-2 rounded">
+    <!-- PAGE HEADER -->
+    <div class="flex flex-col sm:flex-row sm:justify-between items-center gap-4 mb-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Categories</h1>
+            <p class="text-gray-500 text-sm">System administration portal tags</p>
+        </div>
+        <a href="/dashboard" class="bg-black hover:bg-gray-800 text-white px-5 py-2.5 rounded-xl font-medium transition shadow-sm">
             Dashboard
         </a>
-
     </div>
 
-</div>
-    <!-- CREATE CATEGORY -->
+    <!-- CREATE CATEGORY MODULE -->
+    <div class="bg-white p-6 rounded-2xl shadow border">
+        <h2 class="text-lg font-bold text-gray-800 mb-4">Create New Category</h2>
+        
+        <!-- ✅ OPTIMIZED: Added id="createCategoryForm" target for async processing -->
+        <form id="createCategoryForm" method="POST" action="/dashboard/categories/create" class="space-y-4">
+            <!-- ✅ FIXED: Injects signed hash token parameters to prevent 403 Forbidden blocks -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-    <div class="bg-white p-4 rounded shadow mb-6">
-   
-        <form method="post"
-              action="/dashboard/categories/create">
-
-            <div class="mb-4">
-                <label class="block mb-2">
-                    Category Name
-                </label>
-
+            <div>
+                <label class="block mb-1.5 text-sm font-semibold text-gray-700">Category Name</label>
                 <input
                     type="text"
                     name="name"
                     required
-                    class="w-full border rounded p-3"
-                    placeholder="Sports"
+                    class="w-full border border-gray-300 rounded-xl p-3 bg-white outline-none focus:ring-2 focus:ring-black transition text-sm"
+                    placeholder="e.g., Sports"
                 >
             </div>
 
-            <div class="mb-4">
-                <label class="block mb-2">
-                    Slug
-                </label>
-
+            <div>
+                <label class="block mb-1.5 text-sm font-semibold text-gray-700">Slug (Optional)</label>
                 <input
                     type="text"
                     name="slug"
-                    class="w-full border rounded p-3"
-                    placeholder="sports"
+                    class="w-full border border-gray-300 rounded-xl p-3 bg-white outline-none focus:ring-2 focus:ring-black transition text-sm"
+                    placeholder="e.g., sports"
                 >
             </div>
 
-            <button
-                type="submit"
-                class="px-4 py-2 border rounded"
-            >
+            <button type="submit" class="bg-black hover:bg-gray-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow-sm">
                 Create Category
             </button>
-
         </form>
-
     </div>
 
-    <!-- CATEGORY LIST -->
-
-    <div class="bg-white rounded shadow">
-
-        <table class="w-full">
-
-            <thead>
-                <tr>
-                    <th class="text-left p-3">ID</th>
-                    <th class="text-left p-3">Name</th>
-                    <th class="text-left p-3">Slug</th>
-                    <th class="text-left p-3">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                {% for cat in categories %}
-
-                <tr class="border-t">
-
-                    <td class="p-3">
-                        {{ cat.id }}
-                    </td>
-
-                    <td class="p-3">
-                        {{ cat.name }}
-                    </td>
-
-                    <td class="p-3">
-                        {{ cat.slug }}
-                    </td>
-
-                    <td class="p-3">
-
-                        <a href="/dashboard/categories/delete/{{ cat.id }}">
-                            Delete
-                        </a>
-
-                    </td>
-
-                </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
+    <!-- CATEGORY LIST MODULE TABLE -->
+    <div class="bg-white rounded-2xl shadow border overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 text-gray-700 font-semibold border-b">
+                    <tr>
+                        <th class="text-left p-4">ID</th>
+                        <th class="text-left p-4">Name</th>
+                        <th class="text-left p-4">Slug</th>
+                        <th class="text-center p-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 divide-y">
+                    {% for cat in categories %}
+                    <!-- ✅ OPTIMIZED: Added category-row-item class to drop deleted items instantly -->
+                    <tr class="hover:bg-gray-50 transition category-row-item">
+                        <td class="p-4 font-mono font-medium text-gray-400">{{ cat.id }}</td>
+                        
+                        <!-- ✅ SECURED: Escaped database text fields to close Stored XSS browser vulnerabilities -->
+                        <td class="p-4 font-semibold text-gray-900 break-words">{{ cat.name | e }}</td>
+                        <td class="p-4 text-gray-500 font-mono text-xs break-words">{{ cat.slug | e }}</td>
+                        
+                        <td class="p-4 text-center">
+                            <!-- ✅ FIXED METHOD: Converted from broken plain link <a> tag to an async secure POST form -->
+                            <form method="POST" action="/dashboard/categories/delete/{{ cat.id }}" class="inline delete-category-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <button type="submit" class="text-red-600 hover:text-red-800 font-semibold text-xs transition underline focus:outline-none">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="p-8 text-center text-gray-400 italic bg-gray-50">
+                            No custom classification categories have been populated yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-
 </div>
 
+<!-- ================= DUAL FUNCTION SYSTEM PROCESSING ENGINE ================= -->
+<script>
+// 1. ASYNCHRONOUS SECURE CATEGORY CREATION INTERCEPTOR
+const createCategoryFormNode = document.getElementById("createCategoryForm");
+if (createCategoryFormNode) {
+    createCategoryFormNode.addEventListener("submit", async function(e) {
+        e.preventDefault(); // Stop standard browser page updates
+        
+        const form = e.target;
+        const tokenInput = form.querySelector('input[name="csrf_token"]');
+        if (!tokenInput || !tokenInput.value) {
+            alert("Security Error: Structural session CSRF verification data token missing.");
+            return;
+        }
+
+        const token = tokenInput.value;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token // ✅ SATISFIES SECURE_CSRF_AND_HEADERS_MIDDLEWARE IN MAIN.PY
+                },
+                body: formData,
+                credentials: "include" // ✅ FIXED: Explicitly appends all active session cookies headers!
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else if (response.ok) {
+                window.location.reload(); // Refresh viewport structural listing layers cleanly upon success
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Failed to process category creation.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A transmission exception occurred during data mutation streams.");
+        }
+    });
+}
+
+// 2. DYNAMIC DELEGATED LISTENER FOR REFRESHLESS CATEGORY DELETIONS
+document.querySelectorAll(".delete-category-form").forEach(form => {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault(); // Suspend standard browser redirect links execution
+
+        if (!confirm("Are you sure you want to permanently delete this category?")) {
+            return;
+        }
+
+        const targetForm = e.target;
+        const tokenInput = targetForm.querySelector('input[name="csrf_token"]');
+        if (!tokenInput || !tokenInput.value) {
+            alert("Security Error: CSRF parameter data string missing.");
+            return;
+        }
+
+        const token = tokenInput.value;
+        const formData = new FormData(targetForm);
+
+        try {
+            const response = await fetch(targetForm.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token // ✅ MATCHES BACKEND EXPECTED MIDDLEWARE TOKEN HEADERS KEY
+                },
+                body: formData,
+                credentials: "include" // ✅ FIXED: Transmits browser session data safely
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else if (response.ok) {
+                // Instantly slide the specific category row container away from view without full-page flickering
+                targetForm.closest(".category-row-item").remove();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Failed to process category removal request.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A connection exception happened while deleting this database entry.");
+        }
+    });
+});
+</script>
 {% endblock %}

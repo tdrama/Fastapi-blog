@@ -1,7 +1,5 @@
 {% extends "base.html" %}
-
 {% block content %}
-
 <div class="p-6">
     <h1 class="text-2xl font-bold mb-6">Login Activity</h1>
 
@@ -14,30 +12,31 @@
                     <th class="p-3 text-left">Time</th>
                 </tr>
             </thead>
-
             <tbody>
                 {% for log in logs %}
                 <tr class="border-t">
-                    <td class="p-3">{{ log.email }}</td>
-                    <td class="p-3">{{ log.ip_address }}</td>
+                    <!-- ✅ SECURED: Added the |e filter to eliminate Stored XSS injection holes -->
+                    <td class="p-3">{{ log.email|e }}</td>
+                    <td class="p-3">{{ log.ip_address|e }}</td>
                     <td class="p-3">
-                        {{ log.created_at.strftime('%d %b %Y %H:%M') }}
+                        {{ log.created_at.strftime('%d %b %Y %H:%M') if log.created_at }}
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-     <div class="flex justify-center items-center gap-2 p-4">
 
-    {% if page > 1 %}
-    <a href="?page={{ page - 1 }}"
-       class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-        Previous
-    </a>
-    {% endif %}
+    <!-- PAGINATION ACCORDIAN CONTROLS -->
+    <div class="flex justify-center items-center gap-2 p-4">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}"
+           class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+            Previous
+        </a>
+        {% endif %}
 
-    {% for p in range(1, total_pages + 1) %}
+        {% for p in range(1, total_pages + 1) %}
         <a href="?page={{ p }}"
            class="px-4 py-2 rounded
            {% if p == page %}
@@ -47,16 +46,14 @@
            {% endif %}">
             {{ p }}
         </a>
-    {% endfor %}
+        {% endfor %}
 
-    {% if page < total_pages %}
-    <a href="?page={{ page + 1 }}"
-       class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-        Next
-    </a>
-    {% endif %}
-
+        {% if page < total_pages %}
+        <a href="?page={{ page + 1 }}"
+           class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+            Next
+        </a>
+        {% endif %}
+    </div>
 </div>
-</div>
-
 {% endblock %}

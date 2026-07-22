@@ -3,7 +3,15 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.user import User
+from fastapi_csrf_protect.exceptions import CsrfProtectError  # if you use this
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
+
+
+
+class NotAuthenticated(HTTPException):
+    def __init__(self):
+        super().__init__(status_code=401, detail="Not authenticated")
 
 # =========================
 # GET CURRENT USER

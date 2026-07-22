@@ -16,7 +16,7 @@ EMAIL_PASSWORD = "your_app_password"
 async def send_login_email(email: str, ip: str):
     message = MessageSchema(
         subject="Admin Login Alert 🔐",
-        recipients=tbamidele021@gmail.com,
+        recipients="tbamidele021@gmail.com",
         body=f"""
         Your admin account was just accessed.
 
