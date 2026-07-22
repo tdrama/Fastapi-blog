@@ -83,27 +83,27 @@ async def secure_csrf_and_headers_middleware(request: Request, call_next):
             or "multipart/form-data" in content_type
         )
                 # ✅ FIXED: Caches the form data stream FIRST, then checks for tokens
- #       if is_form_submission:
-#            try:
-  #              form_data = await request.form()
-   #             request._form = form_data
-    #            
+        if is_form_submission:
+            try:
+                form_data = await request.form()
+                request._form = form_data
+
                 # Only use form data fallback if the header token didn't exist
-     #           if not form_token:
-      #              form_token = form_data.get("csrf_token")
-       #     except Exception:
-        #        pass
+                if not form_token:
+                    form_token = form_data.get("csrf_token")
+            except Exception:
+                pass
 
         #token_to_validate = header_token or form_token
 
-        if not form_token and is_form_submission:
-            try:
-                form_data = await request.form()
-                form_token = form_data.get("csrf_token")
-
-                request._form = form_data
-            except Exception:
-                form_token = None
+#        if not form_token and is_form_submission:
+ #           try:
+  ##              form_data = await request.form()
+    #            form_token = form_data.get("csrf_token")
+#
+ #               request._form = form_data
+  ##          except Exception:
+    #            form_token = None
 
         if not cookie_token:
             return JSONResponse(
