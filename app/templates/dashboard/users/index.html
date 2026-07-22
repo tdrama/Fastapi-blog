@@ -1,348 +1,208 @@
 {% extends "base.html" %}
-
 {% block content %}
-
 <div class="space-y-8">
-
     <!-- TOP HEADER -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
         <div>
-            <h1 class="text-3xl font-bold">
-                Users Management
-            </h1>
-
-            <p class="text-gray-500 mt-1">
-                Manage all registered users
-            </p>
+            <h1 class="text-3xl font-bold">Users Management</h1>
+            <p class="text-gray-500 mt-1">Manage all registered users</p>
         </div>
-
-        <a href="/auth/register"
-           class="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition">
+        <a href="/auth/register" class="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition">
             + Create User
         </a>
-
     </div>
 
     <!-- ANALYTICS -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-
         <!-- TOTAL USERS -->
         <div class="bg-white rounded-2xl shadow p-6">
-
             <div class="flex justify-between items-center">
-
                 <div>
-                    <p class="text-gray-500 text-sm">
-                        Total Users
-                    </p>
-
-                    <h2 class="text-4xl font-bold mt-2">
-                        {{ total_users }}
-                    </h2>
+                    <p class="text-gray-500 text-sm">Total Users</p>
+                    <h2 class="text-4xl font-bold mt-2">{{ total_users }}</h2>
                 </div>
-
-                <div class="text-5xl">
-                    👥
-                </div>
-
+                <div class="text-5xl">👥</div>
             </div>
-
         </div>
 
         <!-- ACTIVE USERS -->
         <div class="bg-white rounded-2xl shadow p-6">
-
             <div class="flex justify-between items-center">
-
                 <div>
-                    <p class="text-gray-500 text-sm">
-                        Active Users
-                    </p>
-
-                    <h2 class="text-4xl font-bold mt-2 text-green-600">
-                        {{ active_users }}
-                    </h2>
+                    <p class="text-gray-500 text-sm">Active Users</p>
+                    <h2 class="text-4xl font-bold mt-2 text-green-600">{{ active_users }}</h2>
                 </div>
-
-                <div class="text-5xl">
-                    ✅
-                </div>
-
+                <div class="text-5xl">✅</div>
             </div>
-
         </div>
 
         <!-- ADMINS -->
         <div class="bg-white rounded-2xl shadow p-6">
-
             <div class="flex justify-between items-center">
-
                 <div>
-                    <p class="text-gray-500 text-sm">
-                        Admins
-                    </p>
-
-                    <h2 class="text-4xl font-bold mt-2 text-blue-600">
-                        {{ admins }}
-                    </h2>
+                    <p class="text-gray-500 text-sm">Admins</p>
+                    <h2 class="text-4xl font-bold mt-2 text-blue-600">{{ admins }}</h2>
                 </div>
-
-                <div class="text-5xl">
-                    🛡️
-                </div>
-
+                <div class="text-5xl">🛡️</div>
             </div>
-
         </div>
 
         <!-- DISABLED -->
         <div class="bg-white rounded-2xl shadow p-6">
-
             <div class="flex justify-between items-center">
-
                 <div>
-                    <p class="text-gray-500 text-sm">
-                        Disabled
-                    </p>
-
-                    <h2 class="text-4xl font-bold mt-2 text-red-600">
-                        {{ disabled_users }}
-                    </h2>
+                    <p class="text-gray-500 text-sm">Disabled</p>
+                    <h2 class="text-4xl font-bold mt-2 text-red-600">{{ disabled_users }}</h2>
                 </div>
-
-                <div class="text-5xl">
-                    🚫
-                </div>
-
+                <div class="text-5xl">🚫</div>
             </div>
-
         </div>
-
     </div>
 
     <!-- USERS TABLE -->
     <div class="bg-white rounded-2xl shadow overflow-hidden">
-
         <!-- TABLE HEADER -->
         <div class="p-6 border-b">
-
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
-                <h2 class="text-2xl font-bold">
-                    All Users
-                </h2>
-
-                <!-- SEARCH -->
-                <input
-                    type="text"
-                    id="searchInput"
-                    placeholder="Search users..."
-                    class="border rounded-xl px-4 py-3 w-full md:w-80 outline-none focus:ring-2 focus:ring-black"
-                >
-
+                <h2 class="text-2xl font-bold">All Users</h2>
+                <input type="text" id="searchInput" placeholder="Search users..."
+                       class="border rounded-xl px-4 py-3 w-full md:w-80 outline-none focus:ring-2 focus:ring-black">
             </div>
-
         </div>
 
-        <!-- TABLE -->
+        <!-- TABLE DATA LAYOUT -->
         <div class="overflow-x-auto">
-
             <table class="w-full">
-
                 <thead class="bg-gray-100">
-
                     <tr>
-
-                        <th class="text-left p-4 font-semibold">
-                            User
-                        </th>
-
-                        <th class="text-left p-4 font-semibold">
-                            Email
-                        </th>
-
-                        <th class="text-left p-4 font-semibold">
-                            Role
-                        </th>
-
-                        <th class="text-left p-4 font-semibold">
-                            Status
-                        </th>
-
-                        <th class="text-left p-4 font-semibold">
-                            Joined
-                        </th>
-
-                        <th class="text-left p-4 font-semibold">
-                            Actions
-                        </th>
-
+                        <th class="text-left p-4 font-semibold">User</th>
+                        <th class="text-left p-4 font-semibold">Email</th>
+                        <th class="text-left p-4 font-semibold">Role</th>
+                        <th class="text-left p-4 font-semibold">Status</th>
+                        <th class="text-left p-4 font-semibold">Joined</th>
+                        <th class="text-left p-4 font-semibold">Actions</th>
                     </tr>
-
                 </thead>
-
                 <tbody id="usersTable">
-
                     {% for user in users %}
-
                     <tr class="border-t hover:bg-gray-50 transition">
-
-                        <!-- USER -->
+                        <!-- USER PROFILE BLOCK -->
                         <td class="p-4">
-
                             <div class="flex items-center gap-3">
-
                                 {% if user.profile_image %}
-
-                                <img
-                                    src="{{ user.profile_image }}"
-                                    class="w-12 h-12 rounded-full object-cover"
-                                >
-
+                                <img src="{{ user.profile_image|e }}" class="w-12 h-12 rounded-full object-cover" alt="Profile">
                                 {% else %}
-
-                                <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                                    👤
-                                </div>
-
+                                <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">👤</div>
                                 {% endif %}
-
                                 <div>
-
-                                    <h3 class="font-semibold">
-                                        {{ user.username }}
-                                    </h3>
-
-                                    <p class="text-sm text-gray-500">
-                                        ID: {{ user.id }}
-                                    </p>
-
+                                    <h3 class="font-semibold">{{ user.username|e }}</h3>
+                                    <p class="text-sm text-gray-500">ID: {{ user.id }}</p>
                                 </div>
-
                             </div>
-
                         </td>
 
                         <!-- EMAIL -->
-                        <td class="p-4">
-                            {{ user.email }}
-                        </td>
+                        <td class="p-4">{{ user.email|e }}</td>
 
-                        <!-- ROLE -->
+                        <!-- ROLE STICKERS -->
                         <td class="p-4">
-
                             {% if user.is_super_admin %}
-
-                            <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm">
-                                Super Admin
-                            </span>
-
+                            <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm">Super Admin</span>
                             {% elif user.is_admin %}
-
-                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
-                                Admin
-                            </span>
-
+                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">Admin</span>
                             {% else %}
-
-                            <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                                User
-                            </span>
-
+                            <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">User</span>
                             {% endif %}
-
                         </td>
 
-                        <!-- STATUS -->
+                        <!-- CURRENT BOLEAN STATUS STICKERS -->
                         <td class="p-4">
-
                             {% if user.is_active %}
-
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                                Active
-                            </span>
-
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">Active</span>
                             {% else %}
-
-                            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
-                                Disabled
-                            </span>
-
+                            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">Disabled</span>
                             {% endif %}
-
                         </td>
 
-                        <!-- DATE -->
+                        <!-- ENROLLED TIMESTAMP -->
                         <td class="p-4 text-gray-600">
-
                             {{ user.created_at.strftime('%d %b %Y') if user.created_at else '' }}
-
                         </td>
 
-                        <!-- ACTIONS -->
+                        <!-- MANAGED ROW ACTIONS CONTROLS -->
                         <td class="p-4">
-
-                            <div class="flex flex-wrap gap-2">
-
-                                <!-- EDIT -->
-                                <a
-                                    href="edit/{{ user.id }}"
-                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm"
-                                >
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <!-- EDIT ANCHOR LINK -->
+                                <a href="/auth/edit/{{ user.id }}"
+                                   class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm transition">
                                     Edit
                                 </a>
 
-                                <!-- DELETE -->
-                                <a
-                                    href="/auth/delete/{{ user.id }}"
-                                    onclick="return confirm('Delete this user?')"
-                                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
-                                >
-                                    Delete
-                                </a>
+                                <!-- 🛡️ SECURE INTERCEPTED FORM: TOGGLE ACTIVE ACCOUNT STATUS BUTTON -->
+                                <form action="/auth/toggle-status/{{ user.id }}" method="POST" class="toggle-status-form inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" 
+                                            class="px-4 py-2 rounded-lg text-sm text-white font-medium transition cursor-pointer {% if user.is_active %}bg-orange-500 hover:bg-orange-600{% else %}bg-green-600 hover:bg-green-700{% endif %}">
+                                        {{ 'Deactivate' if user.is_active else 'Activate' }}
+                                    </button>
+                                </form>
 
+                                <!-- 🛡️ SECURE INTERCEPTED FORM: DELETE ACCOUNT ACTION BUTTON -->
+                                <form method="POST" action="/auth/delete/{{ user.id }}"
+                                      class="delete-user-form inline" onsubmit="return confirm('Delete this user account permanently?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                                        Delete
+                                    </button>
+                                </form>
                             </div>
-
                         </td>
-
                     </tr>
-
                     {% endfor %}
-
                 </tbody>
-
             </table>
-
         </div>
-
     </div>
-
 </div>
 
-<!-- SEARCH SCRIPT -->
+<!-- ✅ PRODUCTION AUTOMATION SCRIPTS -->
 <script>
-
+// A. Native Client-Side Table Filter Input Controller
 const searchInput = document.getElementById("searchInput");
-
 searchInput.addEventListener("keyup", function() {
-
     const value = this.value.toLowerCase();
-
     const rows = document.querySelectorAll("#usersTable tr");
-
     rows.forEach(row => {
-
         const text = row.innerText.toLowerCase();
-
-        row.style.display = text.includes(value)
-            ? ""
-            : "none";
-
+        row.style.display = text.includes(value) ? "" : "none";
     });
-
 });
 
-</script>
+// B. Secure Async Cross-Origin Trans-Header Validation for Toggle Status Action Forms
+document.querySelectorAll(".toggle-status-form").forEach(form => {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault(); // Suspend classic un-headered submission vector
+        
+        const targetForm = e.target;
+        const token = targetForm.querySelector('input[name="csrf_token"]').value;
 
+        const response = await fetch(targetForm.action, {
+            method: "POST",
+            headers: {
+                "X-CSRF-Token": token // Securely routes validation key directly to your main.py middleware
+            }
+        });
+
+        if (response.redirected) {
+            window.location.href = response.url; // Reload listings database panel metrics layout cleanly
+        } else {
+            alert("Error: Unable to update account status securely.");
+        }
+    });
+});
+
+// C. Secure Async Cross-Origin Trans-Header Validation for Delete Action Confirmation Forms
+document.querySelectorAll(".delete-user-form").forEach(form => {
+    form.addEventListener("submit", async function(e) {
+e.preventDefault(); // Suspend standard un-headered browser submission loopconst targetForm = e.target;const token = targetForm.querySelector('input[name="csrf_token"]').value;const response = await fetch(targetForm.action, {method: "POST",headers: {"X-CSRF-Token": token // Clears your central request loop check gate flawlessly}});if (response.redirected) {window.location.href = response.url; // Refresh table list viewport elements smoothly} else {alert("Error: Unable to delete user profile securely.");}});});
 {% endblock %}

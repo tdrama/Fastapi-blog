@@ -1,170 +1,152 @@
 {% extends "frontend/base.html" %}
 
- {% block content %}
-
+{% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
 
     <div class="mb-10">
-
-        <h1 class="text-4xl font-bold">
-            Music
-        </h1>
-
-        <p class="text-gray-500 mt-2">
-            Listen to latest uploaded music
-        </p>
-
+        <h1 class="text-4xl font-bold">Music</h1>
+        <p class="text-gray-500 mt-2">Listen to latest uploaded music</p>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
         {% for music in musics %}
+        <!-- Added flex utilities to keep card columns perfectly aligned -->
+        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-2xl transition flex flex-col justify-between">
 
-        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-2xl transition">
+            <!-- UPPER CARD CONTENT -->
+            <div>
+                <!-- COVER IMAGE -->
+                {% if music.cover_image %}
+                <img class="w-full h-64 object-cover" src="{{ url_for('static', path='uploads/' ~ music.cover_image) }}" alt="{{ music.title | e }}">
+                {% endif %}
 
-            <!-- COVER IMAGE -->
-            {% if music.cover_image %}
-            <img
-                src="{{ music.cover_image }}"
-                class="w-full h-64 object-cover"
-            >
-            {% else %}
-            <img
-                src="/static/img/music.jpg"
-                class="w-full h-64 object-cover"
-            >
-            {% endif %}
+                <div class="p-5 pb-0">
+                    <!-- META -->
+                    <div class="flex justify-between text-sm text-gray-500 mb-3">
+                        <span class="truncate pr-2 font-medium">🎵 {{ music.artist | e }}</span>
+                        <span class="shrink-0">{{ music.created_at.strftime('%d %b %Y') if music.created_at else '' }}</span>
+                    </div>
 
-            <div class="p-5">
+                    <!-- TITLE -->
+                    <h2 class="text-2xl font-bold mb-3 break-words">{{ music.title | e }}</h2>
 
-                <!-- META -->
-                <div class="flex justify-between text-sm text-gray-500 mb-3">
+                    <!-- DESCRIPTION -->
+                    <p class="text-gray-600 text-sm mb-5 break-words">{{ music.description | e }}</p>
+                </div>
+            </div>
 
-                    <span>
-                        🎵 {{ music.artist }}
-                    </span>
+            <!-- LOWER MEDIA & INTERACTIONS LAYER -->
+            <div class="p-5 pt-0">
+                <!-- AUDIO PLAYER -->
+                {% if music.music_file %}
+                <audio controls class="w-full mb-4" preload="metadata">
+                    <source src="{{ url_for('static', path='uploads/' ~ music.music_file) }}">
+                    Your browser does not support audio playback.
+                </audio>
+                {% else %}
+                <p class="text-red-500 mb-4 text-sm font-medium">Audio file unavailable</p>
+                {% endif %}
 
-                    <span>
-                        {{ music.created_at }}
-                    </span>
+                <!-- DOWNLOAD ACTION (FIXED STRIPPED SYNTAX CLOSURES) -->
+                {% if music.file_exists %}
+                <!-- ✅ FIXED: Patched the missing tag quotes and structural brackets -->
+                <a href="/music/download/{{ music.id }}" class="w-full inline-block text-center bg-black hover:bg-gray-800 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+                    Download Track
+                </a>
+                {% endif %}
 
+                <!-- STATS -->
+                <div class="mt-4 flex gap-4 text-xs text-gray-400 font-medium">
+                    <p>👁 {{ music.views or 0 }} plays</p>
+                    <p>⬇️ {{ music.downloads or 0 }} downloads</p>
                 </div>
 
-                <!-- TITLE -->
-                <h2 class="text-2xl font-bold mb-3">
-                    {{ music.title }}
-                </h2>
-
-                <!-- DESCRIPTION -->
-                <p class="text-gray-600 mb-5">
-                    {{ music.description }}
-                </p>
-
-                <!-- AUDIO PLAYER -->
-                <audio controls class="w-full">
-                    <source src="{{ music.music_file }}">
-                </audio>
-
-                <!-- DOWNLOAD -->
-                <a
-                    href="{{ music.music_file }}"
-                    download
-                    class="mt-4 inline-block bg-black text-white px-4 py-2 rounded-lg"
-                >
-                    Download Music
-                </a>
-                <p class="text-sm text-gray-400"> 👁 {{ music.views or 0 }} plays </p> 
-          <p class="text-sm text-gray-400"> ⬇️ {{ music.downloads or 0 }} downloads </p>
-                <!-- ===================================== -->
-                <!-- COMMENTS SECTION -->
-                <!-- ===================================== -->
-
+                <!-- COMMENTS ENGINE PANEL -->
                 <div class="mt-6 border-t pt-4">
-
-                    <h3 class="text-lg font-bold mb-3">
+                    <h3 class="text-sm font-bold text-gray-700 mb-3">
                         💬 Comments ({{ music.comments|length if music.comments else 0 }})
                     </h3>
 
-                    <!-- COMMENT FORM -->
-<!--                    <form
-                        action="/music/{{ music.id }}/comment"
-                        method="POST"
-                        class="space-y-3 mb-4"
-                    > -->
-                   <form
-    action="{{ url_for('add_music_comment', music_id=music.id) }}"
-    method="POST"
-    class="space-y-3 mb-4"
->
-                        <input
-                            type="text"
-                            name="name"
-                            placeholder="Your name"
-                            required
-                            class="w-full border rounded-lg px-3 py-2"
-                        >
+                    <!-- ✅ OPTIMIZED: Changed to class="dynamic-music-comment-form" for clean array event looping -->
+                    <form action="/music/{{ music.id }}/comment" method="POST" class="dynamic-music-comment-form space-y-3 mb-4">
+                        {% if csrf_token %}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        {% endif %}
 
-                        <textarea
-                            name="content"
-                            placeholder="Write a comment..."
-                            required
-                            class="w-full border rounded-lg px-3 py-2"
-                        ></textarea>
+                        <input type="text" name="name" placeholder="Your name" required
+                               class="w-full border rounded-xl px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500">
 
-                        <button
-                            type="submit"
-                            class="bg-black text-white px-4 py-2 rounded-lg"
-                        >
-                            Post
+                        <textarea name="content" rows="2" placeholder="Write a comment..." required
+                                  class="w-full border rounded-xl px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+
+                        <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white text-xs font-semibold py-2 px-4 rounded-xl transition shadow-sm">
+                            Post Comment
                         </button>
-
                     </form>
 
-                    <!-- COMMENT LIST -->
-                    <div class="space-y-3 max-h-64 overflow-y-auto">
-
+                    <!-- COMMENT FLOW TIMELINE -->
+                    <div class="space-y-3 max-h-48 overflow-y-auto pr-1">
                         {% for comment in music.comments %}
-
-                        <div class="bg-gray-100 p-3 rounded-lg">
-
-                            <div class="flex justify-between text-sm text-gray-500">
-
-                                <strong>
-                                    {{ comment.name }}
-                                </strong>
-
-                                <span>
-                                    {{ comment.created_at }}
-                                </span>
-
+                        <div class="bg-gray-50 border p-3 rounded-xl text-sm break-words shadow-sm">
+                            <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                <strong class="text-gray-700">{{ comment.name | e }}</strong>
+                                <span>{{ comment.created_at.strftime('%d %b %H:%M') if comment.created_at else '' }}</span>
                             </div>
-
-                            <p class="mt-1 text-gray-700">
-                                {{ comment.content }}
-                            </p>
-
+                            <p class="text-gray-600 text-xs">{{ comment.content | e }}</p>
                         </div>
-
                         {% else %}
-
-                        <p class="text-sm text-gray-400">
-                            No comments yet
-                        </p>
-
+                        <p class="text-xs text-gray-400 text-center py-2 italic">No comments yet.</p>
                         {% endfor %}
-
                     </div>
-
                 </div>
-
             </div>
 
         </div>
-
         {% endfor %}
-
     </div>
 
 </div>
 
+<!-- ✅ REFRESHLESS INLINE MULTI-CARD POST ROUTING PROCESSOR -->
+<script>
+document.querySelectorAll(".dynamic-music-comment-form").forEach(form => {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault(); // Stop standard unheadered navigation loops
+
+        const targetForm = e.target;
+        const tokenInput = targetForm.querySelector('input[name="csrf_token"]');
+        
+        if (!tokenInput || !tokenInput.value) {
+            alert("Security Error: CSRF parameter data string missing.");
+            return;
+        }
+
+        const token = tokenInput.value;
+        const formData = new FormData(targetForm);
+
+        try {
+            const response = await fetch(targetForm.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token // ✅ SATISFIES THE MAIN MIDDLEWARE HEADERS ENGINE
+                },
+                body: formData,
+                credentials: "include"
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else if (response.ok) {
+                window.location.reload(); // Refresh cleanly on submission success
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Failed to process public track comment.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A system network transmission error occurred during processing.");
+        }
+    });
+});
+</script>
 {% endblock %}

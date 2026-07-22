@@ -1,118 +1,148 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Comments</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "base.html" %}
+{% block content %}
+<div class="p-6">
+    <h1 class="text-3xl font-bold mb-6">Comments</h1>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background: #f4f6f8;
-        }
+    <div class="bg-white rounded-xl shadow overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="p-4 text-left">Author</th>
+                    <th class="p-4 text-left">Comment</th>
+                    <th class="p-4 text-left">On</th>
+                    <th class="p-4 text-left">Date</th>
+                    <th class="p-4 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comment in comments %}
+                <tr class="border-t hover:bg-gray-50">
+                    <!-- AUTHOR -->
+                    <td class="p-4">
+                        <p class="font-semibold">{{ comment.name|e if comment.name else 'Anonymous' }}</p>
+                    </td>
 
-        .container {
-            max-width: 900px;
-            margin: auto;
-        }
+                    <!-- COMMENT -->
+                    <td class="p-4 max-w-md">
+                        <p class="text-gray-800 break-words">{{ comment.content|e }}</p>
+                    </td>
 
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+                    <!-- ON WHAT -->
+                    <td class="p-4">
+                        {% if comment.video %}
+                        <a href="/video/{{ comment.video.id }}" target="_blank" class="text-blue-600 hover:underline">
+                            Video: {{ comment.video.title|e }}
+                        </a>
+                        {% elif comment.music %}
+                        <a href="/music/{{ comment.music.id }}" target="_blank" class="text-blue-600 hover:underline">
+                            Music: {{ comment.music.title|e }}
+                        </a>
+                        {% elif comment.news %}
+                        <a href="/news/{{ comment.news.id }}" target="_blank" class="text-blue-600 hover:underline">
+                            News: {{ comment.news.title|e }}
+                        </a>
+                        {% else %}
+                        <span class="text-gray-400">Deleted</span>
+                        {% endif %}
+                    </td>
 
-        .comment-card {
-            background: #fff;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+                    <!-- DATE -->
+                    <td class="p-4 text-gray-600">
+                        {{ comment.created_at.strftime('%d %b %Y %H:%M') if comment.created_at }}
+                    </td>
 
-        .meta {
-            font-size: 13px;
-            color: #777;
-            margin-bottom: 8px;
-        }
+                    <!-- ACTIONS -->
+                    <td class="p-4">
+                        <!-- ✅ OPTIMIZED: Replaced inline onsubmit hook with class="delete-comment-form" target -->
+                        <form method="post" action="/dashboard/comments/delete/{{ comment.id }}" class="inline delete-comment-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-        .content {
-            font-size: 15px;
-            margin-bottom: 10px;
-        }
+        {% if not comments %}
+        <div class="p-8 text-center text-gray-500">No comments found</div>
+        {% endif %}
+    </div>
 
-        .actions {
-            display: flex;
-            gap: 10px;
-        }
 
-        .btn {
-            padding: 6px 10px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 13px;
-        }
+<!-- 🛡️ INTEGRATED SECURE ALIGNED PAGINATION CONTROL PANEL FOOTER -->
+        <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
+            <span class="text-sm text-gray-600">
+                Page <span class="font-semibold text-black">{{ page if page else 1 }}</span> of <span class="font-semibold text-black">{{ total_pages if total_pages > 0 else 1 }}</span>
+            </span>
 
-        .delete {
-            background: #e74c3c;
-            color: white;
-        }
+            <div class="flex gap-2">
+                <!-- PREVIOUS SWITCH TRIGGER LINK -->
+                {% if has_prev %}
+                <a href="/dashboard/comments?status={{ status }}&page={{ prev_page }}" class="px-4 py-2 border bg-white text-gray-800 rounded-xl hover:bg-gray-100 font-medium text-sm transition shadow-sm">
+                    ← Previous
+                </a>
+                {% else %}
+                <button disabled class="px-4 py-2 border bg-gray-100 text-gray-400 rounded-xl font-medium text-sm cursor-not-allowed">
+                    ← Previous
+                </button>
+                {% endif %}
 
-        .delete:hover {
-            background: #c0392b;
-        }
-
-        .empty {
-            text-align: center;
-            color: #888;
-            margin-top: 50px;
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="container">
-
-    <h1>Comments</h1>
-
-    {% if comments  %}
-
-        {% for comment in comments %}
-
-        <div class="comment-card">
-
-            <div class="meta">
-                ID: {{ comment.id }}
-                {% if comment.user %}
-                    | User ID: {{ comment.user.username }}
-            { elif comment.user_id %}| User ID: {{ comment.user_id }}
+                <!-- NEXT SWITCH TRIGGER LINK -->
+                {% if has_next %}
+                <a href="/dashboard/comments?status={{ status }}&page={{ next_page }}" class="px-4 py-2 border bg-white text-gray-800 rounded-xl hover:bg-gray-100 font-medium text-sm transition shadow-sm">
+                    Next →
+                </a>
+                {% else %}
+                <button disabled class="px-4 py-2 border bg-gray-100 text-gray-400 rounded-xl font-medium text-sm cursor-not-allowed">
+                    Next →
+                </button>
                 {% endif %}
             </div>
-
-            <div class="content">
-                {{ comment.content }}
-            </div>
-
-            <div class="actions">
-                <a href="/dashboard/comments/delete/{{ comment.id }}" class="btn delete"
-         onclick="return confirm('Delete comment?')">
-                    Delete
-                </a>
-            </div>
-
         </div>
 
-        {% endfor %}
-
-    {% else %}
-
-        <div class="empty">
-            No comments found.
-        </div>
-
-    {% endif %}
-
+    </div> <!-- Closes main table manager panel card wrapper container -->
 </div>
+<!-- ✅ PERFECTED ROW REMOVAL ENGINE BLOCK -->
+<script>
+document.querySelectorAll(".delete-comment-form").forEach(form => {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault(); // Intercept browser navigation loops
 
-</body>
-</html>
+        if (!confirm("Are you sure you want to permanently delete this comment?")) {
+            return;
+        }
+
+        const targetForm = e.target;
+        const token = targetForm.querySelector('input[name="csrf_token"]').value;
+        const formData = new FormData(targetForm);
+
+        try {
+            const response = await fetch(targetForm.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token // Secure bridge straight to your middleware
+                },
+                body: formData,
+                credentials: "include"
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url; // Route back to specific listings if issued
+            } else if (response.ok) {
+                // Instantly remove the row block directly out of view layout structures
+                targetForm.closest("tr").remove();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Failed to process comment deletion request.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A transmission exception occurred while removing this record.");
+        }
+    });
+});
+</script>
+{% endblock %}

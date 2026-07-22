@@ -1,0 +1,115 @@
+u{% extends "base.html" %}
+{% block content %}
+<h2 class="text-2xl font-bold mb-4">Categories</h2>        
+
+<!-- ✅ OPTIMIZED: Added id="createCategoryForm" to hook the async submission -->
+<form id="createCategoryForm" method="post" action="/categories/create" class="mb-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    
+    <input type="text" name="name" placeholder="Category Name" class="border p-2 w-full mb-2" required>
+    <input type="text" name="slug" placeholder="Slug (optional)" class="border p-2 w-full mb-2">
+
+    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+        Create Category
+    </button>
+</form>
+
+<hr>
+
+<!-- LIST CATEGORIES -->
+<div id="categoriesListContainer">
+    {% for cat in categories %}
+    <!-- ✅ OPTIMIZED: Added row identification container tracking -->
+    <div class="p-2 border-b flex justify-between items-center category-row-item">
+        <div>
+            <b>{{ cat.name|e }}</b>
+            <small>({{ cat.slug|e }})</small>
+        </div>
+        
+        <!-- ✅ OPTIMIZED: Replaced inline onsubmit with class="delete-category-form" target -->
+        <form method="post" action="/categories/delete/{{ cat.id }}" class="inline delete-category-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="text-red-500 hover:text-red-700">
+                Delete
+            </button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ✅ PERFECTED REFRESHLESS CATEGORY PROCESSING ENGINE -->
+<script>
+// 1. HANDLER FOR ASYNCHRONOUS CATEGORY CREATION
+const createForm = document.getElementById("createCategoryForm");
+if (createForm) {
+    createForm.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(createForm);
+        const token = formData.get("csrf_token");
+
+        try {
+            const response = await fetch(createForm.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token
+                },
+                body: formData,
+                credentials: "include"
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else if (response.ok) {
+                window.location.reload(); // Reload cleanly to update the listings list grid view
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Failed to create new category.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A transmission exception occurred during creation routing.");
+        }
+    });
+}
+
+// 2. DELEGATED RUNTIME LISTENER FOR DYNAMIC CATEGORY DELETIONS
+document.querySelectorAll(".delete-category-form").forEach(form => {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        if (!confirm("Are you sure you want to permanently delete this category?")) {
+            return;
+        }
+
+        const targetForm = e.target;
+        const token = targetForm.querySelector('input[name="csrf_token"]').value;
+        const formData = new FormData(targetForm);
+
+        try {
+            const response = await fetch(targetForm.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token
+                },
+                body: formData,
+                credentials: "include"
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else if (response.ok) {
+                // Instantly remove the specific row layout container element without full-page flickering
+                targetForm.closest(".category-row-item").remove();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Failed to process category removal.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A connection exception happened while deleting this entry.");
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,173 +1,122 @@
 {% extends "frontend/base.html" %}
 
-{% block content %}
-
+{% block content %}                                                                     
 <!-- ABOUT HERO -->
 <section class="max-w-7xl mx-auto px-4 py-12">
-
     <div class="grid lg:grid-cols-2 gap-10 items-center">
 
         <!-- TEXT CONTENT -->
         <div>
-
-            <h1 class="text-4xl md:text-5xl font-bold leading-tight">
+            <h1 class="text-4xl md:text-5xl font-bold leading-tight text-gray-900">
                 About Us
             </h1>
 
+            <!-- ✅ FIXED: Isolated base paragraph cleanly to comply with HTML template nesting validations -->
             <p class="text-gray-600 mt-6 text-lg leading-relaxed">
                 Welcome to our platform — a modern blog system built for sharing
                 news, music, videos, and stories in real time.
                 We aim to deliver fast, clean, and engaging content
                 across all devices.
-               
-            <!-- Quote about tower work -->
-            <svg class="w-12 h-12 text-blue-200 mb-4" fill="currentColor" viewBox="0 0 32 32">
-                <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z"/>
-            </svg>
-            
-            <blockquote class="text-xl sm:text-2xl font-semibold text-gray-800 leading-relaxed">
-                "Climbing towers taught me precision and safety. Building websites taught me the same — every line of code must hold weight, just like every bolt on a tower."
-            </blockquote>
-            
             </p>
 
-            <p class="text-gray-600 mt-4">
+            <!-- Quote about tower work -->
+            <div class="mt-6 border-l-4 border-blue-600 pl-4 space-y-3">
+                <svg class="w-10 h-10 text-blue-200" fill="currentColor" viewBox="0 0 32 32">
+                    <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z"/>
+                </svg>
+
+                <blockquote class="text-xl sm:text-2xl font-semibold text-gray-800 leading-relaxed italic">
+                    "Climbing towers taught me precision and safety. Building websites taught me the same — every line of code must hold weight, just like every bolt on a tower."
+                </blockquote>
+            </div>
+
+            <p class="text-gray-600 mt-6 leading-relaxed">
                 Our mission is to connect people through media and information,
                 with a smooth user experience on mobile, tablet, and desktop.
             </p>
 
             <div class="mt-8 flex gap-4">
-
                 <a href="/news"
-                   class="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition">
+                   class="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition shadow">
                     Explore News
                 </a>
-
                 <a href="/contact"
-                   class="bg-gray-200 px-6 py-3 rounded-xl hover:bg-gray-300 transition">
+                   class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-xl font-medium transition">
                     Contact Us
                 </a>
-
             </div>
-
         </div>
 
-        <!-- IMAGE -->
-        <div class="rounded-2xl overflow-hidden shadow-xl">
-
+        <!-- HERO BRAND TECH ARTWORK IMAGE -->
+        <div class="rounded-2xl overflow-hidden shadow-xl border bg-gray-100">
+            <!-- ✅ FIXED: Compiles the full static path to render your uploaded image flawlessly -->
             <img
-                src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=1000" 
-                alt="About us image"
-                class="w-full h-[300px] md:h-[450px] object-cover"
+                src="{{ url_for('static', path='img/technician.jpg') }}"
+                alt="Precision electrical engineering and code compilation workspace"
+                class="w-full h-[350px] md:h-[500px] object-cover"
             >
-
         </div>
 
     </div>
-
 </section>
-
-
+                                                                                        
 <!-- FEATURES SECTION -->
-<section class="bg-gray-50 py-16 mt-10">
-
+<section class="bg-gray-100 py-16 mt-10 border-t border-b">
     <div class="max-w-7xl mx-auto px-4">
-
-        <h2 class="text-3xl font-bold text-center mb-10">
-            Why Choose Us
-        </h2>
-
+        <h2 class="text-3xl font-bold text-center text-gray-900 mb-10">Why Choose Us</h2>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-
             <div class="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
-                <h3 class="text-xl font-bold mb-2">🚀 Fast Performance</h3>
-                <p class="text-gray-600">
-                    Optimized for speed across all devices and networks.
-                </p>
+                <h3 class="text-xl font-bold mb-2 text-blue-600">🚀 Fast Performance</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">Optimized asynchronous routing workflows for blistering download speed bounds across any host node.</p>
             </div>
-
             <div class="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
-                <h3 class="text-xl font-bold mb-2">📱 Fully Responsive</h3>
-                <p class="text-gray-600">
-                    Works perfectly on mobile, tablet, and desktop screens.
-                </p>
+                <h3 class="text-xl font-bold mb-2 text-blue-600">📱 Fully Responsive</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">Adapts seamlessly to small screen devices, retaining flawless structural grids from mobile viewport up to desktop layout scales.</p>
             </div>
-
             <div class="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
-                <h3 class="text-xl font-bold mb-2">🎵 Media Support</h3>
-                <p class="text-gray-600">
-                    Supports music, video, news, and blog content seamlessly.
-                </p>
+                <h3 class="text-xl font-bold mb-2 text-blue-600">🎵 Media Support</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">Processes live audio streaming data, video file players, and custom news article pipelines using optimized binary chunk handlers.</p>
             </div>
-
         </div>
-
     </div>
-
 </section>
-
 
 <!-- TEAM / STORY -->
 <section class="max-w-7xl mx-auto px-4 py-16">
-
     <div class="grid lg:grid-cols-2 gap-10 items-center">
-
         <!-- IMAGE -->
-        <div class="rounded-2xl overflow-hidden shadow-lg">
-
+        <div class="rounded-2xl overflow-hidden shadow-lg border">
             <img
-                src="/static/img/team.jpg"
-                alt="Team image"
+                src="{{ url_for('static', path='img/team.jpg') }}"
+                alt="Team working on system architecture modules"
                 class="w-full h-[300px] md:h-[450px] object-cover"
             >
-
         </div>
-
         <!-- TEXT -->
         <div>
-
-            <h2 class="text-3xl md:text-4xl font-bold">
-                Our Story
-            </h2>
-
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900">Our Story</h2>
             <p class="text-gray-600 mt-6 leading-relaxed">
                 We started as a small idea — building a simple platform
                 to share content easily. Today, we have grown into a
                 full multimedia system with news, videos, and music.
             </p>
-
-            <p class="text-gray-600 mt-4">
+            <p class="text-gray-600 mt-4 leading-relaxed">
                 Our focus is simplicity, speed, and user experience.
                 Every feature is designed to work smoothly on all devices.
             </p>
-
         </div>
-
     </div>
-
 </section>
 
-
-<!-- CTA -->
+<!-- CALL TO ACTION (CTA) -->
 <section class="bg-black text-white py-16">
-
     <div class="max-w-4xl mx-auto text-center px-4">
-
-        <h2 class="text-3xl md:text-4xl font-bold">
-            Ready to explore our platform?
-        </h2>
-
-        <p class="text-gray-300 mt-4">
-            Discover news, music, and videos all in one place.
-        </p>
-
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Ready to explore our platform?</h2>
+        <p class="text-gray-400 mt-4 max-w-xl mx-auto text-sm leading-relaxed">Discover custom news timelines, listen to audio track collections, and play full high-definition video uploads instantly.</p>
         <a href="/"
-           class="inline-block mt-6 bg-white text-black px-8 py-3 rounded-xl font-semibold hover:bg-gray-200 transition">
-            Get Started
+           class="inline-block mt-6 bg-white hover:bg-gray-100 text-black font-semibold px-8 py-3 rounded-xl transition shadow">
+            Get Started Natively
         </a>
-
     </div>
-
 </section>
-
 {% endblock %}

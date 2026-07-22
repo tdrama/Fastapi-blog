@@ -1,548 +1,269 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class="min-h-screen bg-gray-100 flex">
 
     <!-- MOBILE OVERLAY -->
-    <div
-        id="overlay"
-        class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"
-        onclick="toggleSidebar()"
-    ></div>
+    <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
     <!-- SIDEBAR -->
-    <aside
-        id="sidebar"
-        class="fixed lg:static z-50 top-0 left-0 h-full w-72 bg-black text-white p-6 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto"
-    >
-
+    <aside id="sidebar" class="fixed lg:static z-50 top-0 left-0 h-full w-72 bg-black text-white p-6 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+        
         <!-- HEADER -->
         <div class="flex justify-between items-center mb-10">
-
-            <h1 class="text-3xl font-bold">
-                BAM-Tech
-            </h1>
-
-            <button
-                class="lg:hidden text-3xl"
-                onclick="toggleSidebar()"
-            >
-                ×
-            </button>
-
+            <h1 class="text-3xl font-bold">BAM-Tech</h1>
+            <button class="lg:hidden text-3xl" onclick="toggleSidebar()">×</button>
         </div>
 
         <!-- USER -->
         <div class="flex items-center gap-4 mb-10">
-
             {% if user and user.profile_image %}
-
-            <img
-                src="{{ user.profile_image }}"
-                class="w-14 h-14 rounded-full object-cover border-2 border-white"
-            >
-
+            <img src="{{ user.profile_image|e }}" class="w-14 h-14 rounded-full object-cover border-2 border-white" alt="Profile">
             {% else %}
-
-            <div class="w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center text-2xl">
-                👤
-            </div>
-
+            <div class="w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center text-2xl">👤</div>
             {% endif %}
-
             <div>
-
-                <h2 class="font-bold text-lg">
-                    {{ user.username if user else "Admin" }}
-                </h2>
-
-                <p class="text-gray-400 text-sm">
-                    Administrator
-                </p>
-
+                <h2 class="font-bold text-lg">{{ user.username|e if user else "Admin" }}</h2>
+                <p class="text-gray-400 text-sm">Administrator</p>
             </div>
-
         </div>
 
         <!-- NAVIGATION -->
         <nav class="space-y-3">
-
-            <a href="/dashboard"
-               class="flex items-center gap-3 bg-gray-900 hover:bg-gray-800 p-4 rounded-xl">
-                📊 Dashboard
-            </a>
-            <a href="/dashboard/login-activity"
-   class="block px-4 py-2 hover:bg-gray-100">
-   🔐 Login Activity
-</a>
-            <a href="/auth/user"
-               class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">
-                👥 Users
-            </a>
-             <a href="/dashboard/categories"
-   class="flex items-center gap-3 hover:bg-gray-800 p-3 rounded">
-    📂 Categories
-</a>
-            <a href="/dashboard/news"
-               class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">
-                📰 News
-            </a>
-
-            <a href="/dashboard/videos"
-               class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">
-                🎥 Videos
-            </a>
-
-            <a href="/dashboard/music"
-               class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">
-                🎵 Music
-            </a>
-
-            <a href="/dashboard/comments"
-               class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">
-                💬 Comments
-            </a>
-
-            <a href="/dashboard/subscribers"
-               class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">
-                📧 Subscribers
-            </a>
-
-            <a href="/auth/logout"
-               class="flex items-center gap-3 bg-red-500 hover:bg-red-600 p-4 rounded-xl mt-10">
-                🚪 Logout
-            </a>
-
+            <a href="/dashboard" class="flex items-center gap-3 bg-gray-900 hover:bg-gray-800 p-4 rounded-xl">📊 Dashboard</a>
+            <a href="/dashboard/login-activity" class="block px-4 py-2 hover:bg-gray-100">🔐 Login Activity</a>
+            <a href="/auth/user" class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">👥 Users</a>
+            <a href="/dashboard/categories" class="flex items-center gap-3 hover:bg-gray-800 p-3 rounded">📂 Categories</a>
+            <a href="/dashboard/news" class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">📰 News</a>
+            <a href="/dashboard/videos" class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">🎥 Videos</a>
+            <a href="/dashboard/music" class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">🎵 Music</a>
+            <a href="/dashboard/comments" class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">💬 Comments</a>
+            <a href="/dashboard/subscribers" class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">📧 Subscribers</a>
+            
+            <!-- Logout should be POST -->
+            <form id="logoutForm" onsubmit="handleLogout(event)" method="post" action="/auth/logout">
+                <input type="hidden" id="csrfToken"  name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="w-full flex items-center gap-3 bg-red-500 hover:bg-red-600 p-4 rounded-xl mt-10">
+                    🚪 Logout
+                </button>
+            </form>
         </nav>
-
     </aside>
 
     <!-- MAIN -->
     <main class="flex-1 min-w-0">
-
         <!-- HEADER -->
         <header class="bg-white shadow-sm px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-30">
-
             <div class="flex items-center gap-4">
-
-                <button
-                    class="lg:hidden text-3xl"
-                    onclick="toggleSidebar()"
-                >
-                    ☰
-                </button>
-
+                <button class="lg:hidden text-3xl" onclick="toggleSidebar()">☰</button>
                 <div>
-
-                    <h1 class="text-2xl md:text-3xl font-bold">
-                        Dashboard
-                    </h1>
-
-                    <p class="text-gray-500 text-sm">
-                        Welcome back administrator
-                    </p>
-
+                    <h1 class="text-2xl md:text-3xl font-bold">Dashboard</h1>
+                    <p class="text-gray-500 text-sm">Welcome back administrator</p>
                 </div>
-
             </div>
-
             <div class="flex items-center gap-4">
-
                 {% if user and user.profile_image %}
-
-                <img
-                    src="{{ user.profile_image }}"
-                    class="w-12 h-12 rounded-full object-cover"
-                >
-
+                <img src="{{ user.profile_image|e }}" class="w-12 h-12 rounded-full object-cover" alt="Profile">
                 {% endif %}
-
             </div>
-
         </header>
 
         <!-- CONTENT -->
         <div class="p-4 md:p-8 space-y-8">
-
+            
             <!-- ANALYTICS -->
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-
                 <div class="bg-white rounded-2xl shadow p-6">
-
                     <div class="flex justify-between items-center">
-
                         <div>
-
-                            <p class="text-gray-500 text-sm">
-                                Total Users
-                            </p>
-
-                            <h2 class="text-4xl font-bold mt-2">
-                                {{ total_users }}
-                            </h2>
-
+                            <p class="text-gray-500 text-sm">Total Users</p>
+                            <h2 class="text-4xl font-bold mt-2">{{ total_users }}</h2>
                         </div>
-
-                        <div class="text-5xl">
-                            👥
-                        </div>
-
+                        <div class="text-5xl">👥</div>
                     </div>
-
                 </div>
-
                 <div class="bg-white rounded-2xl shadow p-6">
-
                     <div class="flex justify-between items-center">
-
                         <div>
-
-                            <p class="text-gray-500 text-sm">
-                                Total News
-                            </p>
-
-                            <h2 class="text-4xl font-bold mt-2">
-                                {{ total_news }}
-                            </h2>
-
+                            <p class="text-gray-500 text-sm">Total News</p>
+                            <h2 class="text-4xl font-bold mt-2">{{ total_news }}</h2>
                         </div>
-
-                        <div class="text-5xl">
-                            📰
-                        </div>
-
+                        <div class="text-5xl">📰</div>
                     </div>
-
                 </div>
-
                 <div class="bg-white rounded-2xl shadow p-6">
-
                     <div class="flex justify-between items-center">
-
                         <div>
-
-                            <p class="text-gray-500 text-sm">
-                                Total Videos
-                            </p>
-
-                            <h2 class="text-4xl font-bold mt-2">
-                                {{ total_videos }}
-                            </h2>
-
+                            <p class="text-gray-500 text-sm">Total Videos</p>
+                            <h2 class="text-4xl font-bold mt-2">{{ total_videos }}</h2>
                         </div>
-
-                        <div class="text-5xl">
-                            🎥
-                        </div>
-
+                        <div class="text-5xl">🎥</div>
                     </div>
-
                 </div>
-
                 <div class="bg-white rounded-2xl shadow p-6">
-
                     <div class="flex justify-between items-center">
-
                         <div>
-
-                            <p class="text-gray-500 text-sm">
-                                Total Music
-                            </p>
-
-                            <h2 class="text-4xl font-bold mt-2">
-                                {{ total_music }}
-                            </h2>
-
+                            <p class="text-gray-500 text-sm">Total Music</p>
+                            <h2 class="text-4xl font-bold mt-2">{{ total_music }}</h2>
                         </div>
-
-                        <div class="text-5xl">
-                            🎵
-                        </div>
-
+                        <div class="text-5xl">🎵</div>
                     </div>
-
                 </div>
-
             </div>
 
             <!-- QUICK ACTIONS -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-
-                <a href="/dashboard/news/create"
-                   class="bg-blue-600 hover:bg-blue-700 text-white p-5 rounded-2xl shadow text-center font-semibold">
-                    ➕ Create News
-                </a>
-
-                <a href="/dashboard/videos/create"
-                   class="bg-purple-600 hover:bg-purple-700 text-white p-5 rounded-2xl shadow text-center font-semibold">
-                    ➕ Upload Video
-                </a>
-
-                <a href="/dashboard/music/create"
-                   class="bg-green-600 hover:bg-green-700 text-white p-5 rounded-2xl shadow text-center font-semibold">
-                    ➕ Upload Music
-                </a>
-
-                <a href="/auth/register"
-                   class="bg-black hover:bg-gray-800 text-white p-5 rounded-2xl shadow text-center font-semibold">
-                    ➕ Add User
-                </a>
-
+                <a href="/dashboard/news/create" class="bg-blue-600 hover:bg-blue-700 text-white p-5 rounded-2xl shadow text-center font-semibold">➕ Create News</a>
+                <a href="/dashboard/videos/create" class="bg-purple-600 hover:bg-purple-700 text-white p-5 rounded-2xl shadow text-center font-semibold">➕ Upload Video</a>
+                <a href="/dashboard/music/create" class="bg-green-600 hover:bg-green-700 text-white p-5 rounded-2xl shadow text-center font-semibold">➕ Upload Music</a>
+                <a href="/auth/register" class="bg-black hover:bg-gray-800 text-white p-5 rounded-2xl shadow text-center font-semibold">➕ Add User</a>
             </div>
 
             <!-- RECENT USERS -->
             <div class="bg-white rounded-2xl shadow overflow-hidden">
-
                 <div class="p-6 border-b">
-
-                    <h2 class="text-2xl font-bold">
-                        Recent Users
-                    </h2>
-
+                    <h2 class="text-2xl font-bold">Recent Users</h2>
                 </div>
-
                 <div class="overflow-x-auto">
-
                     <table class="w-full">
-
                         <thead class="bg-gray-100">
-
                             <tr>
-
-                                <th class="p-4 text-left">
-                                    User
-                                </th>
-
-                                <th class="p-4 text-left">
-                                    Email
-                                </th>
-
-                                <th class="p-4 text-left">
-                                    Status
-                                </th>
-
-                                <th class="p-4 text-left">
-                                    Actions
-                                </th>
-
+                                <th class="p-4 text-left">User</th>
+                                <th class="p-4 text-left">Email</th>
+                                <th class="p-4 text-left">Status</th>
+                                <th class="p-4 text-left">Actions</th>
                             </tr>
-
                         </thead>
-
                         <tbody>
-
                             {% for u in users %}
-
                             <tr class="border-b hover:bg-gray-50">
-
                                 <td class="p-4 flex items-center gap-3">
-
                                     {% if u.profile_image %}
-
-                                    <img
-                                        src="{{ u.profile_image }}"
-                                        class="w-10 h-10 rounded-full object-cover"
-                                    >
-
+                                    <img src="{{ u.profile_image|e }}" class="w-10 h-10 rounded-full object-cover" alt="Avatar">
                                     {% else %}
-
-                                    <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                        👤
-                                    </div>
-
+                                    <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">👤</div>
                                     {% endif %}
-
-                                    <span class="font-semibold">
-                                        {{ u.username }}
-                                    </span>
-
+                                    <span class="font-semibold">{{ u.username|e }}</span>
                                 </td>
-
+                                <td class="p-4">{{ u.email|e }}</td>
                                 <td class="p-4">
-                                    {{ u.email }}
-                                </td>
-
-                                <td class="p-4">
-
                                     {% if u.is_active %}
-
-                                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                                        Active
-                                    </span>
-
+                                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">Active</span>
                                     {% else %}
-
-                                    <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
-                                        Disabled
-                                    </span>
-
+                                    <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">Disabled</span>
                                     {% endif %}
-
                                 </td>
-
                                 <td class="p-4 flex gap-2">
+                                    <a href="/auth/user/edit/{{ u.id }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">Edit</a>
+                                    
+                                    <!-- Delete as POST form -->
+                                    <form method="post" action="/auth/delete/{{ u.id }}" class="inline" onsubmit="return confirm('Delete this user?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">Delete</button>
+                                    </form>
 
-                                    <a href="/auth/user/edit/{{ u.id }}"
-                                       class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
-                                        Edit
-                                    </a>
-
-                                    <a href="/auth/user/delete/{{ u.id }}"
-                                       onclick="return confirm('Delete this user?')"
-                                       class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
-                                        Delete
-                                    </a>
-
+                                    <!-- Toggle status as POST form -->
+                                    <form method="post" action="/auth/toggle-status/{{ u.id }}" class="inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg">
+                                            {% if u.is_active %}Disable{% else %}Enable{% endif %}
+                                        </button>
+                                    </form>
                                 </td>
-
                             </tr>
-
                             {% endfor %}
-
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
 
             <!-- RECENT CONTENT -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
+                
                 <!-- NEWS -->
                 <div class="bg-white rounded-2xl shadow p-6">
-
                     <div class="flex justify-between items-center mb-6">
-
-                        <h2 class="text-2xl font-bold">
-                            Latest News
-                        </h2>
-
-                        <a href="/dashboard/news"
-                           class="text-blue-600 font-semibold">
-                            View All
-                        </a>
-
+                        <h2 class="text-2xl font-bold">Latest News</h2>
+                        <a href="/dashboard/news" class="text-blue-600 font-semibold">View All</a>
                     </div>
-
                     <div class="space-y-4">
-
                         {% for item in latest_news %}
-
                         <div class="border rounded-xl p-4">
-
-                            <h3 class="font-bold text-lg">
-                                {{ item.title }}
-                            </h3>
-
-                            <p class="text-gray-500 text-sm mt-2">
-                                {{ item.category }}
-                            </p>
-
+                            <h3 class="font-bold text-lg">{{ item.title|e }}</h3>
+                            <p class="text-gray-500 text-sm mt-2">{{ item.category|e }}</p>
                             <div class="flex gap-2 mt-4">
-
-                                <a href="/dashboard/news/edit/{{ item.id }}"
-                                   class="bg-blue-500 text-white px-4 py-2 rounded-lg">
-                                    Edit
-                                </a>
-
-                                <a href="/dashboard/news/delete/{{ item.id }}"
-                                   onclick="return confirm('Delete news?')"
-                                   class="bg-red-500 text-white px-4 py-2 rounded-lg">
-                                    Delete
-                                </a>
-
+                                <a href="/dashboard/news/edit/{{ item.id }}" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Edit</a>
+                                
+                                <form method="post" action="/dashboard/news/delete/{{ item.id }}" class="inline" onsubmit="return confirm('Delete news?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg">Delete</button>
+                                </form>
                             </div>
-
                         </div>
-
                         {% endfor %}
-
                     </div>
-
                 </div>
 
                 <!-- VIDEOS -->
                 <div class="bg-white rounded-2xl shadow p-6">
-
                     <div class="flex justify-between items-center mb-6">
-
-                        <h2 class="text-2xl font-bold">
-                            Latest Videos
-                        </h2>
-
-                        <a href="/dashboard/videos"
-                           class="text-blue-600 font-semibold">
-                            View All
-                        </a>
-
+                        <h2 class="text-2xl font-bold">Latest Videos</h2>
+                        <a href="/dashboard/videos" class="text-blue-600 font-semibold">View All</a>
                     </div>
-
                     <div class="space-y-4">
-
                         {% for video in latest_videos %}
-
                         <div class="border rounded-xl p-4">
-
-                            <h3 class="font-bold text-lg">
-                                {{ video.title }}
-                            </h3>
-
-                            <p class="text-gray-500 text-sm mt-2">
-                                {{ video.views }} views
-                            </p>
-
+                            <h3 class="font-bold text-lg">{{ video.title|e }}</h3>
+                            <p class="text-gray-500 text-sm mt-2">{{ video.views }} views</p>
                             <div class="flex gap-2 mt-4">
-
-                                <a href="/dashboard/videos/edit/{{ video.id }}"
-                                   class="bg-blue-500 text-white px-4 py-2 rounded-lg">
-                                    Edit
-                                </a>
-
-                                <a href="/dashboard/videos/delete/{{ video.id }}"
-                                   onclick="return confirm('Delete video?')"
-                                   class="bg-red-500 text-white px-4 py-2 rounded-lg">
-                                    Delete
-                                </a>
-
+                                <a href="/dashboard/videos/edit/{{ video.id }}" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Edit</a>
+                                
+                                <form method="post" action="/dashboard/videos/delete/{{ video.id }}" class="inline" onsubmit="return confirm('Delete video?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg">Delete</button>
+                                </form>
                             </div>
-
                         </div>
-
                         {% endfor %}
-
                     </div>
-
                 </div>
-
             </div>
 
             {% block dashboard_content %}
             {% endblock %}
-
         </div>
-
     </main>
-
 </div>
 
-<!-- SIDEBAR SCRIPT -->
 <script>
-
 function toggleSidebar() {
-
     const sidebar = document.getElementById("sidebar");
-
     const overlay = document.getElementById("overlay");
-
     sidebar.classList.toggle("-translate-x-full");
-
     overlay.classList.toggle("hidden");
-
 }
+async function handleLogout(event) {
+    event.preventDefault();
+    
+    const token = document.getElementById('csrfToken').value;
+    
+    const response = await fetch('/auth/logout', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-Token': token
+        },
+    // Added this line to pass the form payload and prevent backend 422 errors
+        body: new FormData(document.getElementById('logoutForm'))
 
+    });
+    
+    if (response.redirected) {
+        window.location.href = response.url; // Follow the 303 redirection to /auth/login
+    } else if (response.ok) {
+        window.location.href = '/auth/login';
+    } else {
+        alert('Logout failed');
+    }
+}
 </script>
-
 {% endblock %}

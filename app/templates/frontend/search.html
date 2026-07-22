@@ -5,195 +5,129 @@ Search Results
 {% endblock %}
 
 {% block content %}
-
 <div class="max-w-7xl mx-auto px-4 py-10">
 
     <div class="mb-10">
-
-        <h1 class="text-4xl font-bold mb-4">
-            Search Results
-        </h1>
+        <h1 class="text-4xl font-bold mb-4">Search Results</h1>
 
         <form action="/search" method="GET" class="flex gap-3">
-
+            <!-- ✅ SECURED: Sanitized value output with |e filter -->
             <input
                 type="text"
                 name="q"
-                value="{{ q }}"
+                value="{{ q | e }}"
                 placeholder="Search news, music, videos..."
-                class="flex-1 border rounded-xl px-4 py-3 focus:outline-none"
+                class="flex-1 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-
-            <button
-                type="submit"
-                class="bg-blue-600 text-white px-6 py-3 rounded-xl"
-            >
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition">
                 Search
             </button>
-
         </form>
-
     </div>
 
     {% if not news and not music and not videos %}
-
     <div class="bg-white shadow rounded-2xl p-10 text-center">
-
-        <h2 class="text-2xl font-bold mb-3">
-            No Results Found
-        </h2>
-
+        <h2 class="text-2xl font-bold mb-3">No Results Found</h2>
+        <!-- ✅ SECURED: Neutralized reflected XSS payload strings -->
         <p class="text-gray-500">
-            Nothing matched "{{ q }}"
+            Nothing matched "{{ q | e }}"
         </p>
-
     </div>
-
     {% endif %}
 
-    <!-- NEWS -->
-
+    <!-- NEWS SECTION -->
     {% if news %}
-
     <section class="mb-14">
-
-        <h2 class="text-3xl font-bold mb-6">
-            News
-        </h2>
-
+        <h2 class="text-3xl font-bold mb-6">News</h2>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
             {% for item in news %}
-
-            <div class="bg-white rounded-2xl shadow overflow-hidden">
-
+            <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-lg transition">
                 {% if item.image %}
-                <img
-                    src="{{ item.image }}"
-                    class="w-full h-56 object-cover"
-                >
+                <!-- ✅ FIXED: Routes your global relative image strings safely -->
+                <img src="{{ url_for('static', path='uploads/' ~ item.image) }}" class="w-full h-56 object-cover" alt="News Image">
                 {% endif %}
 
                 <div class="p-5">
-
-                    <h3 class="font-bold text-xl mb-2">
-                        {{ item.title }}
+                    <!-- ✅ SECURED: Escaped news title content parameters -->
+                    <h3 class="font-bold text-xl mb-2 break-words">
+                        {{ item.title | e }}
                     </h3>
-
-                    <p class="text-gray-600 mb-4">
-                        {{ item.content[:150] if item.content else "" }}...
+                    <!-- ✅ SECURED: Truncates and string filters text safely -->
+                    <p class="text-gray-600 mb-4 text-sm line-clamp-3">
+                        {{ (item.content[:150] | e) if item.content else "" }}...
                     </p>
-
-                    <a
-                        href="/news/{{ item.id }}"
-                        class="text-blue-600 font-semibold"
-                    >
+                    <a href="/news/{{ item.id }}" class="text-blue-600 hover:text-blue-800 font-semibold text-sm transition">
                         Read More →
                     </a>
-
                 </div>
-
             </div>
-
             {% endfor %}
-
         </div>
-
     </section>
-
     {% endif %}
 
-    <!-- MUSIC -->
-
+    <!-- MUSIC SECTION -->
     {% if music %}
-
     <section class="mb-14">
-
-        <h2 class="text-3xl font-bold mb-6">
-            Music
-        </h2>
-
+        <h2 class="text-3xl font-bold mb-6">Music</h2>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
             {% for item in music %}
-
-            <div class="bg-white rounded-2xl shadow overflow-hidden">
-
+            <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-lg transition">
                 {% if item.cover_image %}
-                <img
-                    src="{{ item.cover_image }}"
-                    class="w-full h-56 object-cover"
-                >
+                <!-- ✅ FIXED: Compiles the full static path for images -->
+                <img src="{{ url_for('static', path='uploads/' ~ item.cover_image) }}" class="w-full h-56 object-cover" alt="Album Cover">
                 {% endif %}
 
                 <div class="p-5">
-
-                    <h3 class="font-bold text-xl">
-                        {{ item.title }}
+                    <!-- ✅ SECURED: Strictly filters track meta headers from XSS -->
+                    <h3 class="font-bold text-xl break-words">
+                        {{ item.title | e }}
                     </h3>
-
-                    <p class="text-gray-500 mb-3">
-                        {{ item.artist }}
+                    <!-- ✅ SECURED: Sanitized artist text parameters -->
+                    <p class="text-gray-500 mb-4 text-sm">
+                        {{ item.artist | e }}
                     </p>
 
-                    <audio controls class="w-full">
-                        <source src="{{ item.music_file }}">
+                    <!-- ✅ FIXED PATHWAY: Feeds storage directory tracking strings to audio tags -->
+                    <audio controls class="w-full" preload="metadata">
+                        <source src="{{ url_for('static', path='uploads/' ~ item.music_file) }}">
+                        Your browser does not support audio playback.
                     </audio>
-
                 </div>
-
             </div>
-
             {% endfor %}
-
         </div>
-
     </section>
-
     {% endif %}
 
-    <!-- VIDEOS -->
-
+    <!-- VIDEOS SECTION -->
     {% if videos %}
-
     <section>
-
-        <h2 class="text-3xl font-bold mb-6">
-            Videos
-        </h2>
-
+        <h2 class="text-3xl font-bold mb-6">Videos</h2>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
             {% for item in videos %}
-
-            <div class="bg-white rounded-2xl shadow overflow-hidden">
-
-                <video controls class="w-full h-56 object-cover">
-                    <source src="{{ item.video_file }}">
+            <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-lg transition">
+                <!-- ✅ FIXED PATHWAY: Compiles your static/uploads structure path perfectly -->
+                <video controls class="w-full h-56 object-cover bg-black" preload="metadata">
+                    <source src="{{ url_for('static', path='uploads/' ~ item.video_file) }}" type="video/mp4">
+                    Your browser does not support the video tag.
                 </video>
 
                 <div class="p-5">
-
-                    <h3 class="font-bold text-xl mb-2">
-                        {{ item.title }}
+                    <!-- ✅ SECURED: String-escaped video header metrics -->
+                    <h3 class="font-bold text-xl mb-2 break-words">
+                        {{ item.title | e }}
                     </h3>
-
-                    <p class="text-gray-600">
-                        {{ item.description[:120] if item.description else "" }}
+                    <!-- ✅ SECURED: Truncates and context filters body logs securely -->
+                    <p class="text-gray-600 text-sm line-clamp-2">
+                        {{ (item.description[:120] | e) if item.description else "" }}
                     </p>
-
                 </div>
-
             </div>
-
             {% endfor %}
-
         </div>
-
     </section>
-
     {% endif %}
 
 </div>
-
 {% endblock %}

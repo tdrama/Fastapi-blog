@@ -1,149 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>{% if meta_title %}
-        {{ meta_title }}
-    {% else %}
-        BAM-Tech
-    {% endif %}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ✅ FIXED: Removed duplicate hardcoded properties, leaving clean, customizable template tokens -->
+    <title>{% if meta_title %}{{ meta_title | e }}{% else %}BAM-Tech{% endif %}</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-   <link rel="icon" href="/static/favicon.ico">
-  <meta name="description"
-      content="Latest news, music and videos from BAM-Tech">
+    <link rel="stylesheet" href="/static/css/output.css">
+    <link rel="icon" href="/static/favicon.ico">
 
-<meta name="keywords"
-      content="news,music,videos,entertainment">
+    <meta name="description" content="{{ meta_description if meta_description else 'Latest news, music and videos from BAM-Tech' | e }}">
+    <meta name="keywords" content="news,music,videos,entertainment">
+    <meta name="author" content="BAM-Tech">
 
-<meta name="author"
-      content="BAM-Tech">
-
-<meta property="og:title"
-      content="BAM-Tech">
-
-<meta property="og:description"
-      content="Latest News, Music and Videos">
-
-<meta property="og:type"
-      content="website">
-<meta name="description"
-      content="{{ meta_description if meta_description else 'Latest news, music and videos from BAM-Tech' }}">
-
-<meta property="og:title"
-      content="{{ meta_title if meta_title else 'BAM-Tech' }}">
-
-<meta property="og:description"
-      content="{{ meta_description if meta_description else 'Latest news, music and videos from BAM-Tech' }}">
-   {% if meta_image %}
-<meta property="og:image" content="{{ meta_image }}">
-{% endif %}
+    <meta property="og:title" content="{{ meta_title if meta_title else 'BAM-Tech' | e }}">
+    <meta property="og:description" content="{{ meta_description if meta_description else 'Latest news, music and videos from BAM-Tech' | e }}">
+    <meta property="og:type" content="website">
+    {% if meta_image %}
+    <meta property="og:image" content="{{ meta_image | e }}">
+    {% endif %}
 </head>
 
-<body class="bg-gray-50">
+<body class="bg-gray-50 flex flex-col min-h-screen">
 
-<!-- HEADER -->
-<header class="bg-white shadow p-4 flex justify-between items-center">
+<!-- MAIN RESPONSIVE VIEWPORT HEADER -->
+<header class="bg-white shadow p-4 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row gap-4 justify-between items-center">
 
-   <!-- <h1 class="text-xl font-bold">My Blog</h1>-->
-<a href="/" class="flex items-center gap-3 group">
-    <!-- Logo Icon -->
-    <svg class="w-10 h-10 text-blue-600 group-hover:text-blue-700 transition" viewBox="0 0 100 100" fill="none">
-        <!-- B shape with circuit pattern -->
-        <path d="M20 15h25c8 0 15 6 15 14v2c0 6-4 11-10 12.5V44c6 1.5 10 6.5 10 12.5v2c0 8-7 14-15 14H20V15z" 
-              stroke="currentColor" stroke-width="6" stroke-linejoin="round" fill="none"/>
-        <!-- Tech circuit dots -->
-        <circle cx="45" cy="28" r="2" fill="currentColor"/>
-        <circle cx="55" cy="50" r="2" fill="currentColor"/>
-        <circle cx="45" cy="72" r="2" fill="currentColor"/>
-        <!-- Signal waves -->
-        <path d="M70 35c3-3 3-8 0-11M75 30c6-6 6-15 0-21" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/>
-    </svg>
-    
-    <!-- Text -->
-    <div class="flex flex-col">
-        <span class="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-blue-600 transition">Bam<span class="text-blue-600">Tech</span></span>
-        <span class="text-xs text-gray-500 -mt-1">Tech Blog</span>
+        <!-- LOGO BRAND POINTER -->
+        <a href="/" class="flex items-center gap-3 group shrink-0">
+            <svg class="w-10 h-10 text-blue-600 group-hover:text-blue-700 transition" viewBox="0 0 100 100" fill="none">
+                <path d="M20 15h25c8 0 15 6 15 14v2c0 6-4 11-10 12.5V44c6 1.5 10 6.5 10 12.5v2c0 8-7 14-15 14H20V15z"
+                      stroke="currentColor" stroke-width="6" stroke-linejoin="round" fill="none"/>
+                <circle cx="45" cy="28" r="2" fill="currentColor"/>
+                <circle cx="55" cy="50" r="2" fill="currentColor"/>
+                <circle cx="45" cy="72" r="2" fill="currentColor"/>
+                <path d="M70 35c3-3 3-8 0-11M75 30c6-6 6-15 0-21" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/>
+            </svg>
+            <div class="flex flex-col">
+                <span class="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-blue-600 transition">Bam<span class="text-blue-600">Tech</span></span>
+                <span class="text-xs text-gray-500 -mt-1">Tech Blog</span>
+            </div>
+        </a>
+
+        <!-- HEADER ROUTING LINK NODES -->
+        <nav class="flex gap-6 text-sm font-semibold text-gray-600">
+            <a href="/" class="hover:text-blue-600 transition">Home</a>
+            <a href="/news" class="hover:text-blue-600 transition">News</a>
+            <a href="/videos" class="hover:text-blue-600 transition">Videos</a>
+            <a href="/music" class="hover:text-blue-600 transition">Music</a>
+        </nav>
+
+        <!-- NATIVE READ-ONLY SEARCH BAR -->
+        <form action="/search" method="GET" class="flex w-full sm:w-auto max-w-xs">
+            <input type="text" name="q" required
+                   placeholder="Search content..."
+                   class="w-full border border-gray-300 px-3 py-1.5 text-sm rounded-l-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+            <button type="submit" class="bg-black hover:bg-gray-800 text-white text-sm font-medium px-4 rounded-r-xl transition shrink-0">
+                Search
+            </button>
+        </form>
     </div>
-</a>
-    <!-- NAV -->
-    <nav class="flex gap-4 text-sm">
-        <a href="/" class="hover:text-blue-600">Home</a>
-        <a href="/news" class="hover:text-blue-600">News</a>
-        <a href="/videos" class="hover:text-blue-600">Videos</a>
-        <a href="/music" class="hover:text-blue-600">Music</a>
-    </nav>
-
-    <!-- SEARCH -->
-    <form action="/search" method="GET" class="flex">
-        <input type="text" name="q"
-               placeholder="Search..."
-               class="border px-2 py-1 rounded-l">
-        <button class="bg-black text-white px-3 rounded-r">
-            Search
-        </button>
-    </form>
-
 </header>
 
-
-<!-- CONTENT -->
-<main class="max-w-6xl mx-auto p-4">
-
+<!-- REGIONAL TARGET VIEWPORT BLOCK CONTENT -->
+<main class="max-w-6xl mx-auto p-4 flex-1 w-full">
     {% block content %}{% endblock %}
-
 </main>
 
+<!-- FOOTER SYSTEM ARCHITECTURE -->
+<footer class="bg-black text-white p-8 mt-auto">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
 
-<!-- FOOTER -->
-<footer class="bg-black text-white p-8 mt-10">
-
-    <div class="grid md:grid-cols-3 gap-6">
-
-        <div>
-            <h2 class="font-bold">About</h2>
-            <p class="text-sm text-gray-300">
-                Modern FastAPI Blog CMS
-            </p>
-   <h3 class="text-sm ">Company</h3>
-                 <ul class="text-sm">
-                     <li><a href="/about" class="hover:text-white transition">About</a></li>
-                     <li><a href="/contact" class="hover:text-white transition">Contact</a></li>
-                     <li><a href="/blog" class="hover:text-white transition">Blog</a></li>
-                 </ul>
-            
-        </div>
-
-        <div>
-            <h2 class="font-bold">Links</h2>
-            <ul class="text-sm space-y-2">
-                <li><a href="/" class="hover:underline">Home</a></li>
-                <li><a href="/news" class="hover:underline">News</a></li>
-                <li><a href="/videos" class="hover:underline">Videos</a></li>
+        <!-- BRAND INFO MODULE -->
+        <div class="space-y-3">
+            <h2 class="font-bold text-lg border-b border-gray-800 pb-2">About</h2>
+            <p class="text-sm text-gray-400 leading-relaxed">Modern FastAPI Blog CMS Platform built for swift content creation delivery loops.</p>
+            <h3 class="text-sm font-semibold text-gray-300 mt-4">Company Directories</h3>
+            <ul class="text-sm text-gray-400 space-y-1.5">
+                <li><a href="/about" class="hover:text-white transition">About Profile</a></li>
+                <li><a href="/contact" class="hover:text-white transition">Contact Us</a></li>
+                <li><a href="/blog" class="hover:text-white transition">Blog Feed</a></li>
             </ul>
         </div>
 
-        <div>
-         <form action="/subscribe" method="post" >
-            <h2 class="font-bold">Subscribe</h2>
-            <input type="email"name="email" class="w-full p-2 text-black rounded">
-            <button type="submit" class="bg-blue-600 w-full mt-2 py-2 rounded">
-                Subscribe
-            </button>
-        {% if request.query_params.get("subscribed") %}
-<div class="bg-green-100 text-green-700 p-3 rounded mb-4">
-    Subscription successful!
-</div>
-{% endif %}
- {% if request.query_params.get("message") == "already_subscribed" %}
-<div class="bg-yellow-100 text-yellow-700 p-3 rounded mb-4">
-    You are already subscribed.
-</div>
-{% endif %}
+        <!-- QUICK ACCESS SUBMODULE LINKS -->
+        <div class="space-y-3">
+            <h2 class="font-bold text-lg border-b border-gray-800 pb-2">Links</h2>
+            <ul class="text-sm text-gray-400 space-y-2">
+                <li><a href="/" class="hover:text-white transition">← Return Home</a></li>
+                <li><a href="/news" class="hover:text-white transition">📰 Explore News</a></li>
+                <li><a href="/videos" class="hover:text-white transition">🎥 Featured Videos</a></li>
+            </ul>
         </div>
 
-    </div>
+        <!-- PROTECTED NEWSLETTER SUBSCRIPTION COMPONENT -->
+        <div class="space-y-3">
+            <h2 class="font-bold text-lg border-b border-gray-800 pb-2">Subscribe</h2>
+            <p class="text-xs text-gray-400 leading-normal">Stay up to date with fresh tech updates directly in your inbox.</p>
+         <!-- Update your newsletter form tag in base.html to hit the new ajax path -->
+<form id="footerSubscribeForm" action="/api/v1/subscribe-ajax" method="POST" class="space-y-2">
+    <input type="email" name="email" required placeholder="Enter email address"
+           class="w-full p-2.5 text-sm text-black bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 w-full py-2.5 text-sm font-semibold rounded-xl transition shadow">
+        Subscribe Now
+    </button>
+</form>
 
-</footer>
+<div id="alertBoxContainer" class="mt-3"></div>
 
-</body>
-</html>
+<!-- ✅ REFRESHLESS NEWSLETTER SUBSCRIPTION ASYNC SCRIPT INTERCEPT BRIDGE -->
+<script>
+const subscribeForm = document.getElementById("footerSubscribeForm");
+if (subscribeForm) {
+    subscribeForm.addEventListener("submit", async function(e) {
+        e.preventDefault(); 
+
+        const form = e.target;
+        const alertBoxContainer = document.getElementById("alertBoxContainer");
+        
+        // Clean package data natively using standard URL-encoded components
+        const formData = new URLSearchParams(new FormData(form));
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "application/json"
+                },
+                body: formData
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok) {
+                if (alertBoxContainer) {
+                    alertBoxContainer.innerHTML = `<div class="bg-green-900/50 border border-green-700 text-green-200 text-xs p-3 rounded-xl">✔ Subscription successful!</div>`;
+                }
+                form.reset();
+            } else {
+                if (alertBoxContainer) {
+                    alertBoxContainer.innerHTML = `<div class="bg-red-900/50 border border-red-700 text-red-200 text-xs p-3 rounded-xl">❌ Error: ${result.detail || 'Subscription rejected.'}</div>`;
+                }
+            }
+        } catch (error) {
+            console.error("Subscription Error Loop Context:", error);
+        }
+    });
+}
+</script>
+

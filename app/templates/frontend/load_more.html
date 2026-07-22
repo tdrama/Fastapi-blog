@@ -1,88 +1,69 @@
-{% for item in feed %}
+ {% for item in feed %}
 
-    {% if item.type == "news" %}
+    <!-- ================= UPPER IMAGE, VIDEO COVER, & BADGE LAYOUT ================= -->
+    <div>
+        {% if item.type == 'video' %}
+            <!-- ✅ VIDEOS: Skip images entirely and render the video element right at the top of the card -->
+            {% if item.video_file %}
+                <video controls class="w-full h-56 object-cover bg-black" preload="none"
+                       poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                       src="{% if item.video_file.startswith('/static') %}{{ item.video_file }}{% else %}{{ url_for('static', path='uploads/' ~ item.video_file) }}{% endif %}"></video>
+            {% endif %}
+        {% else %}
+            <!-- ✅ OTHER CONTENT TYPES (News & Music): Maintain standard image/placeholder thumbnails -->
+            {% if item.image %}
+                {% if item.image.startswith('/static') or item.image.startswith('http') %}
+                    <img src="{{ item.image }}" alt="{{ item.title | e }}" class="w-full h-56 object-cover bg-gray-100">
+                {% else %}
+                    <img src="{{ url_for('static', path='uploads/' ~ item.image) }}" alt="{{ item.title | e }}" class="w-full h-56 object-cover bg-gray-100">
+                {% endif %}
+            {% else %}
+                <img src="/static/img/placeholder.jpg" alt="Default Placeholder Cover" class="w-full h-56 object-cover bg-gray-100">
+            {% endif %}
+        {% endif %}
 
-    <div class="bg-white rounded-2xl shadow overflow-hidden">
-
-        <img
-            src="{{ item.obj.image }}"
-            loading="lazy"
-            class="w-full h-60 object-cover"
-        >
-
-        <div class="p-5">
-
-            <span class="text-red-600 font-bold">
-                NEWS
+        <div class="p-5 pb-0">
+            <!-- Dynamic Category/Type Badge Module -->
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full text-white uppercase tracking-wider
+                {% if item.type == 'news' %}bg-red-500
+                {% elif item.type == 'video' %}bg-blue-500
+                {% else %}bg-purple-500{% endif %}">
+                {{ item.type | title | e }}
             </span>
 
-            <h3 class="text-xl font-bold mt-2">
-                {{ item.obj.title }}
+            <h3 class="text-xl font-bold mt-4 text-gray-900 break-words line-clamp-2">
+                {{ item.title | e }}
             </h3>
 
-            <a href="/news/{{ item.id }}"
-               class="text-blue-600 hover:underline">
-                Read More →
-            </a>
-
+            {% if item.content %}
+            <p class="text-gray-600 mt-3 text-sm break-words line-clamp-3">
+                {{ (item.content[:120] | e) }}...
+            </p>
+            {% endif %}
         </div>
-
     </div>
 
-    {% elif item.type == "music" %}
-
-    <div class="bg-white rounded-2xl shadow overflow-hidden">
-
-        <img
-            src="{{ item.obj.cover_image }}"
-            loading="lazy"
-            class="w-full h-60 object-cover"
-        >
-
-        <div class="p-5">
-
-            <span class="text-purple-600 font-bold">
-                MUSIC
-            </span>
-
-            <h3 class="text-xl font-bold mt-2">
-                {{ item.obj.title }}
-            </h3>
-
-            <audio controls class="w-full mt-3">
-                <source src="{{ item.obj.music_file }}">
-            </audio>
-
+    <!-- ================= LOWER CONTROLS & MEDIA TIMELINE PLAYER CORE ================= -->
+    <div class="p-5 pt-0">
+        <!-- Metadata Metrics Bar -->
+        <div class="flex justify-between items-center mt-5 text-xs font-medium text-gray-400 border-t pt-4">
+            <span>👁 {{ item.views or 0 }} views</span>
+            <span>📅 {{ item.created_at.strftime('%d %b %Y') if item.created_at else '' }}</span>
         </div>
 
+        <!-- ✅ FIXED: Removed the old lower video placement so videos don't display twice -->
+        {% if item.type == 'music' %}
+            {% if item.music_file %}
+                <audio controls class="w-full mt-4" preload="metadata"
+                       src="{% if item.music_file.startswith('/static') %}{{ item.music_file }}{% else %}{{ url_for('static', path='uploads/' ~ item.music_file) }}{% endif %}"></audio>
+            {% endif %}
+        {% endif %}
+
+        <!-- Navigation Action Buttons -->
+        <a href="{% if item.type == 'video' %}/videos/{{ item.id }}{% else %}/{{ item.type }}/{{ item.slug or item.id }}{% endif %}"
+           class="inline-block mt-4 text-sm font-semibold text-blue-600 hover:text-blue-800 transition">
+            Continue Reading →
+        </a>
     </div>
-
-    {% elif item.type == "video" %}
-
-    <div class="bg-white rounded-2xl shadow overflow-hidden">
-
-        <video
-            controls
-            preload="metadata"
-            class="w-full h-60 object-cover"
-        >
-            <source src="{{ item.obj.video_file }}">
-        </video>
-
-        <div class="p-5">
-
-            <span class="text-blue-600 font-bold">
-                VIDEO
-            </span>
-
-            <h3 class="text-xl font-bold mt-2">
-                {{ item.obj.title }}
-            </h3>
-
-        </div>
-
-    </div>
-
-    {% endif %}
 
 {% endfor %}

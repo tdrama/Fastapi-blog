@@ -1,77 +1,130 @@
 {% extends "frontend/base.html" %}
 
 {% block content %}
-
 <div class="max-w-7xl mx-auto px-4 py-8">
 
     <div class="mb-10">
-
-        <h1 class="text-4xl font-bold">
-            Videos
-        </h1>
-
-        <p class="text-gray-500 mt-2">
-            Watch latest uploaded videos
-        </p>
-
+        <h1 class="text-4xl font-bold">Videos</h1>
+        <p class="text-gray-500 mt-2">Watch latest uploaded videos</p>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
         {% for video in videos %}
+        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-2xl transition flex flex-col justify-between">
+            
+            <!-- VIDEO CONTAINER -->
+            <div>
+                <video controls class="w-full h-64 object-cover bg-black" preload="metadata">
+                    <source src="/static/uploads/{{ video.video_file }}" type="video/mp4">
+                </video>
 
-        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-2xl transition">
+                <div class="p-5">
+                    <div class="flex justify-between text-sm text-gray-500 mb-3">
+                        <span>👤 Admin</span>
+                        <span>
+                            {{ video.created_at.strftime('%d %b %Y') if video.created_at else '' }}
+                        </span>
+                    </div>
 
-            <video
-                controls
-                class="w-full h-64 object-cover bg-black"
-            >
-                <source src="{{ video.video_file }}">
-            </video>
+                    <!-- ✅ SECURED: Neutralizes XSS parsing holes inside video titles -->
+                    <h2 class="text-2xl font-bold mb-3 break-words">
+                        {{ video.title | e }}
+                    </h2>
 
-            <div class="p-5">
+                    <!-- ✅ SECURED: Escapes video description layout text -->
+                    <p class="text-gray-600 text-sm break-words whitespace-pre-wrap">
+                        {{ video.description | e }}
+                    </p>
+                    
+                    <p class="text-xs text-gray-400 mt-3 font-medium">
+                        ⬇ {{ video.downloads or 0 }} downloads
+                    </p>
+                </div>
+            </div>
 
-                <div class="flex justify-between text-sm text-gray-500 mb-3">
-
-                    <span>
-                        👤 Admin
-                    </span>
-
-                    <span>
-                        {{ video.created_at }}
-                    </span>
-
+            <!-- COMMENTS PANEL CONTAINER -->
+            <div class="p-5 border-t bg-gray-50 space-y-4">
+                <h3 class="text-sm font-semibold text-gray-700">Comments Panel</h3>
+                
+                <!-- COMMENT CONTAINER GRID -->
+                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {% for comment in video.comments %}
+                    <!-- ✅ SECURED: Applied severe |e string filtering onto user messages -->
+                    <div class="bg-white border p-3 rounded-xl text-sm text-gray-800 break-words shadow-sm">
+                        {{ comment.content | e }}
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-gray-400 text-center py-2 italic">No comments yet</p>
+                    {% endfor %}
                 </div>
 
-                <h2 class="text-2xl font-bold mb-3">
-                    {{ video.title }}
-                </h2>
-
-                <p class="text-gray-600">
-                    {{ video.description }}
-                </p>
-           <p class="text-xs text-gray-300 mt-2">
-    ⬇ {{ video.downloads or 0 }} downloads
-</p>
+                <!-- ✅ SECURED & OPTIMIZED FORM: Replaced native submission hooks with class target loops -->
+                <form method="POST" action="/video/comment/{{ video.id }}" class="mt-3 dynamic-comment-form space-y-2">
+                    <!-- ✅ FIXED: Injects the cryptographically signed layout hash value dynamically -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    
+                    <textarea 
+                        name="content" 
+                        rows="2" 
+                        required
+                        placeholder="Write a public comment..." 
+                        class="w-full text-sm border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-black focus:outline-none resize-none bg-white transition"
+                    ></textarea>
+                    
+                    <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white text-xs font-semibold py-2 px-4 rounded-xl transition shadow-sm">
+                        Post Comment
+                    </button>
+                </form>
             </div>
-             {% for comment in video.comments %}
 
-<div class="bg-gray-100 p-3 rounded mb-2">
-    {{ comment.content }}
-</div>
-
-{% endfor %}
-
-<form method="POST" action="/video/comment/{{ video.id }}">
-    <textarea name="content"></textarea>
-    <button>Comment</button>
-</form>
         </div>
-
         {% endfor %}
-
     </div>
 
 </div>
 
+<!-- ✅ PERFECTED MULTI-CARD INTERCEPT HANDLER REGISTRATION ENGINE -->
+<script>
+// Query all looped post elements via class assignment array groups
+document.querySelectorAll(".dynamic-comment-form").forEach(form => {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault(); // Stop standard unheadered navigation loops
+
+        const targetForm = e.target;
+        // Target token cleanly from within the specific scoped card container space
+        const tokenInput = targetForm.querySelector('input[name="csrf_token"]');
+        
+        if (!tokenInput || !tokenInput.value) {
+            alert("Security Configuration Error: CSRF parameter value stream missing.");
+            return;
+        }
+
+        const token = tokenInput.value;
+        const formData = new FormData(targetForm);
+
+        try {
+            const response = await fetch(targetForm.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token // ✅ SATISFIES THE MAIN MIDDLEWARE SECURITY INTERCEPT ENGINE
+                },
+                body: formData,
+                credentials: "include"
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url; // Route directly into redirect targets if issued
+            } else if (response.ok) {
+                window.location.reload(); // Refresh viewport tracking loops cleanly on submission success
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Failed to process public comment stream entry securely.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A system network transmission error occurred during processing.");
+        }
+    });
+});
+</script>
 {% endblock %}

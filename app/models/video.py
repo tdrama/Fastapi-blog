@@ -28,7 +28,7 @@ class Video(Base):
     file_size_display = Column(String(100), nullable=True)
 
     duration = Column(Float, default=0)
-
+    thumbnail = Column(String(1000), nullable=True)
     file_hash = Column(String(255), unique=True, nullable=True)
 
     views = Column(Integer, default=0)

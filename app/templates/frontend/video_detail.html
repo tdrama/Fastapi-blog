@@ -1,93 +1,163 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
 
-<div class="max-w-5xl mx-auto py-10">
-
-    <h1 class="text-4xl font-bold">
-        {{ video.title }}
-    </h1>
-
-    <p class="text-gray-500 mt-2">
-        👁 {{ video.views }}
-        Views
-    </p>
-
-    <video
-        controls
-        class="w-full mt-6 rounded-lg"
-    >
-        <source src="{{ video.video_file }}">
-    </video>
-
-    <div class="mt-6">
-
-        <p>
-            {{ video.description }}
+    <!-- ARTICLE METADATA HEADER -->
+    <div class="space-y-2">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight break-words text-gray-900">
+            {{ video.title | e }}
+        </h1>
+        <p class="text-gray-500 text-xs sm:text-sm">
+            👁 {{ video.views or 0 }} views • 📁 Category: {{ video.category.name if video.category else "Unclassified" | e }}
         </p>
-
     </div>
 
-    <div class="mt-6">
+    <!-- RESPONSIVE VIDEO PLAYER FRAME -->
+    <div class="mt-4 sm:mt-6 rounded-2xl overflow-hidden bg-black border shadow-lg">
+        <video controls class="w-full h-auto max-h-[550px] object-contain" preload="metadata">
+            {% if video.video_file.startswith('/static') or video.video_file.startswith('http') %}
+                <source src="{{ video.video_file }}" type="video/mp4">
+            {% else %}
+                <source src="/static/uploads/{{ video.video_file }}" type="video/mp4">
+            {% endif %}
+            Your browser does not support the video tag playback.
+        </video>
+    </div>
 
-        <a href="{{ video.video_file }}"
+    <!-- ACTIONS BLOCK: DOWNLOAD & SHARE -->
+    <div class="mt-6 flex flex-col sm:flex-row gap-4 items-center border-b pb-6">
+        <a href="{% if video.video_file.startswith('/static') %}{{ video.video_file }}{% else %}/static/uploads/{{ video.video_file }}{% endif %}"
            download
-           class="bg-red-600 text-white px-5 py-3 rounded-lg">
-            Download Video
+           class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-xl text-center text-sm transition shadow-sm shrink-0">
+            Download Video Track
         </a>
 
+        <div class="w-full flex">
+            <input id="share-link" type="text" value="{{ request.url | e }}" readonly
+                   class="w-full border border-gray-300 rounded-l-xl px-3 py-3 text-xs bg-gray-50 outline-none truncate">
+            <button onclick="copyLink()"
+                    class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-3 rounded-r-xl text-xs font-semibold transition shrink-0">
+                Copy Link
+            </button>
+        </div>
     </div>
 
+    <!-- DESCRIPTION BOX -->
     <div class="mt-6">
-
-        <input
-            type="text"
-            value="{{ request.url }}"
-            readonly
-            class="w-full border p-3 rounded"
-        >
-
+        <p class="text-gray-700 leading-relaxed text-sm whitespace-pre-wrap break-words">
+            {{ video.description | e if video.description else 'No description provided for this track.' }}
+        </p>
     </div>
 
+    <!-- PUBLIC INTERACTIVE COMMENTS TIMELINE -->
+    <div class="mt-10">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">💬 Public Conversation</h2>
 
-
-
-        <!-- COMMENT FORM -->
-        <form method="POST" action="/videos/{{ video.id }}/comment" class="mb-6">
-                                                                            <textarea
+        <!-- COMMENT UPLOAD POST FORM -->
+        <form id="publicCommentForm" method="POST" action="/videos/{{ video.id }}/comment" class="mb-8 space-y-3">
+            <input type="hidden" id="csrfToken" name="csrf_token" value="{{ csrf_token }}">
+            <textarea
                 name="content"
-                class="w-full border rounded-xl p-3"
-                placeholder="Write a comment..."
+                rows="3"
                 required
+                class="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-black focus:outline-none resize-none bg-white transition"
+                placeholder="Share your thoughts or feedback regarding this track..."
             ></textarea>
-
-            <button class="mt-2 bg-black text-white px-4 py-2 rounded-xl">
+            <button type="submit" class="bg-black hover:bg-gray-800 text-white text-xs font-bold py-2.5 px-5 rounded-xl transition shadow-sm">
                 Post Comment
             </button>
-
         </form>
 
-        <!-- COMMENT LIST -->
+        <!-- COMMENT LIST FEED STRUCTURE -->
         <div class="space-y-4">
-
-            {% for comment in video.comments %}
-
-            <div class="bg-gray-100 p-4 rounded-xl">
-
-                <p class="text-sm text-gray-600">
-                    👤 {{ comment.user.username if comment.user else "Anonymous" }}
+            {% for comment in comments %}
+            <div class="bg-gray-50 border p-4 rounded-xl shadow-sm break-words">
+                <p class="text-xs text-gray-400 font-bold mb-1 flex items-center gap-1">
+                    👤 {{ comment.name | e if comment.name else "Anonymous" }}
                 </p>
-
-                <p class="mt-1">
-                    {{ comment.content }}
+                <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+                    {{ comment.content | e }}
                 </p>
-
             </div>
-
+            {% else %}
+            <p class="text-xs text-gray-400 text-center py-6 italic">No comments posted yet. Be the first to join the mix!</p>
             {% endfor %}
-
         </div>
 
+        <!-- Dynamic 10-Comment Pagination Navigation Controls -->
+        {% if total_pages > 1 %}
+        <div class="mt-8 flex justify-center items-center gap-2 border-t pt-6">
+            {% if current_page > 1 %}
+                <a href="?page={{ current_page - 1 }}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold rounded-xl transition shadow-sm">← Previous</a>
+            {% else %}
+                <span class="px-4 py-2 bg-gray-100 text-gray-400 text-xs font-semibold rounded-xl cursor-not-allowed border">← Previous</span>
+            {% endif %}
+
+            <div class="flex items-center gap-1 text-xs font-bold">
+                {% for p in range(1, total_pages + 1) %}
+                <a href="?page={{ p }}" class="w-8 h-8 flex items-center justify-center rounded-xl transition {% if p == current_page %}bg-black text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                    {{ p }}
+                </a>
+                {% endfor %}
+            </div>
+
+            {% if current_page < total_pages %}
+                <a href="?page={{ current_page + 1 }}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold rounded-xl transition shadow-sm">Next →</a>
+            {% else %}
+                <span class="px-4 py-2 bg-gray-100 text-gray-400 text-xs font-semibold rounded-xl cursor-not-allowed border">Next →</span>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
-{% endblock %}                                               55
 </div>
+
+<!-- ================= FRONTEND DYNAMIC INTERACTION LOGIC ================= -->
+<script>
+function copyLink() {
+    const input = document.getElementById('share-link');
+    if (input) {
+        input.select();
+        input.setSelectionRange(0, 99999); // Mobile compatibility patch
+        navigator.clipboard.writeText(input.value).then(() => {
+            alert('Video watch link copied to clipboard!');
+        });
+    }
+}
+
+// ASYNCHRONOUS SECURE REFRESHLESS REJECTION-PROOF COMMENTS PIPELINE
+const videoCommentForm = document.getElementById("publicCommentForm");
+if (videoCommentForm) {
+    videoCommentForm.addEventListener("submit", async function(e) {
+        e.preventDefault(); // Suspend standard unheadered navigation loops
+        
+        const form = e.target;
+        const token = document.getElementById("csrfToken").value;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token // ✅ SATISFIES THE MAIN MIDDLEWARE TOKEN HEADERS SECURITY CHECK
+                },
+                body: formData,
+                credentials: "include" // ✅ FORCES BROWSER TO ATTACH ALL ACTIVE SESSION COOKIES
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else if (response.ok) {
+                window.location.reload(); // Refresh smoothly on comment success
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.detail || "Error: Failed to register your comment row profile.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A transmission network failure occurred during processing.");
+        }
+    });
+}
+</script>
+{% endblock %}
