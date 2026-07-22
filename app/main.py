@@ -18,8 +18,18 @@ from app.core.config import settings
 from app.core.exceptions import NotAuthenticated
 from slowapi import _rate_limit_exceeded_handler
 from pydantic import BaseModel
+# =========================
+# EXPLICIT MODEL REGISTRATION
+# =========================
+from app.models.user import User
+from app.models.news import News
+from app.models.video import Video
+from app.models.music import Music
+from app.models.comment import Comment
+from app.models.subscriber import Subscriber
+from app.models.category import Category
 
-from app.models import user, video, music, news, comment, analytics, subscriber, stream_log, login_log, category, feed
+#from app.models import user, video, music, news, comment, analytics, subscriber, stream_log, login_log, category, feed
 # Routers
 from app.routes import category as category_router
 from app.routes.seo import router as seo_router
