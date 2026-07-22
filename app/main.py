@@ -19,7 +19,7 @@ from app.core.exceptions import NotAuthenticated
 from slowapi import _rate_limit_exceeded_handler
 from pydantic import BaseModel
 
-from app.models import user, video, music, news, comment, analytics, subscriber, stream_log, login_log, category
+from app.models import user, video, music, news, comment, analytics, subscriber, stream_log, login_log, category, feed
 # Routers
 from app.routes import category as category_router
 from app.routes.seo import router as seo_router
@@ -39,7 +39,11 @@ from slowapi import Limiter
 # CREATE DATABASE TABLES
 # =========================
 Base.metadata.create_all(bind=engine)
-
+try:
+    from init_db import create_feed_view
+    create_feed_view()
+except Exception as e:
+    print(f"Feed view aggregation initialization skipped: {e}")
 # =========================
 # RATE LIMITER
 # =========================
