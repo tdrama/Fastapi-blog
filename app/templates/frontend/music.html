@@ -128,7 +128,7 @@ document.querySelectorAll(".dynamic-music-comment-form").forEach(form => {
             const response = await fetch(targetForm.action, {
                 method: "POST",
                 headers: {
-                    "X-CSRF-Token": token // ✅ SATISFIES THE MAIN MIDDLEWARE HEADERS ENGINE
+                    "X-CSRF-Token": csrfToken // ✅ SATISFIES THE MAIN MIDDLEWARE HEADERS ENGINE
                 },
                 body: formData,
                 credentials: "include"

@@ -10,7 +10,7 @@
         {% endif %}
 
         <!-- 💥 FIXED: Added an ID to the form to handle submission securely -->
-        <form id="loginForm" action="/auth/login" method="post" class="space-y-4">
+        <form id="loginForm" action="/my-secret-vault-99/login" method="post" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="email" name="email" id="emailInput" placeholder="Email" required class="w-full border p-4 rounded-lg">
             <input type="password" name="password" id="passwordInput" placeholder="Password" required class="w-full border p-4 rounded-lg">

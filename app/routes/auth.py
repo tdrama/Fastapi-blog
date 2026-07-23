@@ -20,7 +20,9 @@ from datetime import datetime
 from app.core.security import hash_password, verify_password
 from app.models.user import User
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+router = APIRouter(prefix="/my-secret-vault-99", tags=["Authentication"])
+
 templates = Jinja2Templates(directory="app/templates")
 
 def get_current_user(request: Request, db: Session = Depends(get_db)):
