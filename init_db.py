@@ -4,11 +4,11 @@ from app.core.database import engine
 def create_feed_view():
     with engine.begin() as connection:
         try:
-            # 1. Clear out any old virtual view attempts that block table creation
+            # 1. Wipe out any old blocking configurations cleanly
             connection.execute(text("DROP VIEW IF EXISTS feed;"))
             connection.execute(text("DROP TABLE IF EXISTS feed;"))
             
-            # 2. Build a real, solid physical table structure matching your 10 columns
+            # 2. Re-create the physical database table structure
             create_table_query = """
             CREATE TABLE feed (
                 id INTEGER,
@@ -25,20 +25,20 @@ def create_feed_view():
             """
             connection.execute(text(create_table_query))
             
-            # 3. Aggregate and copy live rows across your actual singular tables smoothly
+            # 3. ✅ FIXED: Clean UNION ALL query string without trailing character blocks
             insert_query = """
-            INSERT INTO feed 
+            INSERT INTO feed (id, title, slug, content, media, views, created_at, type, video_file, music_file)
             SELECT id, title, slug, content, image AS media, views, created_at, 'news' AS type, NULL AS video_file, NULL AS music_file FROM news
             UNION ALL
             SELECT id, title, NULL AS slug, description AS content, NULL AS media, views, created_at, 'video' AS type, video_file, NULL AS music_file FROM video
             UNION ALL
-            SELECT id, title, NULL AS slug, NULL AS content, image AS media, views, created_at, 'music' AS type, NULL AS video_file, music_file FROM music;
+            SELECT id, title, NULL AS slug, NULL AS content, image AS media, views, created_at, 'music' AS type, NULL AS video_file, music_file FROM music
             """
             connection.execute(text(insert_query))
-            print("Successfully initialized physical, indexed 10-column feed database table 🎉")
+            print("Successfully initialized physical 10-column feed table 🎉")
             
         except Exception as e:
-            print(f"Database build failure layout context: {e}")
+            print(f"Database build breakdown: {e}")
 
 if __name__ == "__main__":
     create_feed_view()
