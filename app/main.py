@@ -83,11 +83,6 @@ csrf_signer = Signer(settings.SECRET_KEY)
 
 @app.middleware("http")
 async def secure_csrf_and_headers_middleware(request: Request, call_next):
-    # ✅ BYPASS CHECK: Allow the AJAX subscription endpoint to pass through safely without token checks
-
-  #  if request.url.path in ["/api/v1/subscribe-ajax", "/auth/register","/auth/login"]:
-   #     return await call_next(request)
-
     if request.method in ["POST", "PUT", "DELETE", "PATCH"]:
         cookie_token = request.cookies.get("csrf_token_cookie")
         header_token = request.headers.get("X-CSRF-Token")
@@ -104,58 +99,6 @@ async def secure_csrf_and_headers_middleware(request: Request, call_next):
                     status_code=403,
                     content={"detail": "CSRF validation failed: Invalid signature"}
                 )
-      #  content_type = request.headers.get("content-type", "").lower()
-       # is_form_submission = (
-        #    "application/x-www-form-urlencoded" in content_type
-         #   or "multipart/form-data" in content_type
-       # )
-                # ✅ FIXED: Caches the form data stream FIRST, then checks for tokens
-       # if is_form_submission:
-        #    try:
-         #       form_data = await request.form()
-          #      request._form = form_data
-
-                # Onlyy use form data fallback if the header token didn't exist
-            #    if not form_token:
-             #       form_token = form_data.get("csrf_token")
-           # except Exception:
-            #    pass
-
-        #token_to_validate = header_token or form_token
-
-#        if not form_token and is_form_submission:
- #           try:
-  ##              form_data = await request.form()
-    #            form_token = form_data.get("csrf_token")
-#
- #               request._form = form_data
-  ##          except Exception:
-    #            form_token = None
-#
- #       if not cookie_token:
-  #          return JSONResponse(
-   #             status_code=403,
-    #            content={"detail": "CSRF validation failed: Missing token"}
-     #       )
-      ##  if not form_token:
-        #    return JSONResponse(
-         #       status_code=403,
-          #      content={"detail": "Missing csrf_token"}
-           # )
-       # if not secrets.compare_digest(cookie_token, form_token):
-        ##    return JSONResponse(
-          #      status_code=403,
-               # content={"detail": "CSRF validation failed: Token mismatch"}
-           #     content={"detail": "Token mismatch","cookie": cookie_token, "form": form_token,}
-           # )
-
-       # try:
-         #   csrf_signer.unsign(form_token)
-       # except BadSignature:
-        #    return JSONResponse(
-         #       status_code=403,
-          #      content={"detail": "CSRF validation failed: Invalid signature"}
-           # )
     response = await call_next(request)
 
     # Apply Production Security Headers
@@ -172,26 +115,6 @@ async def secure_csrf_and_headers_middleware(request: Request, call_next):
         "connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://onrender.com; "
     )
     return response
-  #  response = await call_next(request)
-
-   # response.headers["X-Frame-Options"] = "SAMEORIGIN"
-   # response.headers["X-Content-Type-Options"] = "nosniff"
-   # response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-   # response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-   # response.headers["X-XSS-Protection"] = "1; mode=block"
-    # FIXED VARIANT: Grants explicit execution paths to TinyMCE assets while keeping scripts secure
-    #response.headers["Content-Security-Policy"] = (
-   # "default-src 'self'; "
-    #"script-src 'self' 'unsafe-inline' 'unsafe-eval' "
-   # "https://code.jquery.com "
-    #"https://cdn.jsdelivr.net; "
- #   "style-src 'self' 'unsafe-inline' "
-  #  "https://cdn.jsdelivr.net; "
-   # "img-src 'self' data: blob: https:; "
-    #"font-src 'self' data: https://cdn.jsdelivr.net; "
-   # "connect-src 'self' http://127.0.0.1:8000 http://localhost:8000; "  
-#)
- #   return response
 
 # ==========================================
 # GLOBAL APP STATE JINJA2 CSRF HELPER
@@ -259,8 +182,8 @@ app.add_exception_handler(RateLimitExceeded, custom_rate_limit_handler)
 # =========================
 app.exception_handler(NotAuthenticated)
 def auth_redirect_handler(request: Request, exc: NotAuthenticated):
-    return RedirectResponse(url="/auth/login", status_code=302)
 
+    return RedirectResponse(url="/my-secret-vault-99/login", status_code=302)
 # =========================
 # STATIC FILES
 # =========================
