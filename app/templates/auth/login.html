@@ -10,14 +10,18 @@
         {% endif %}
 
         <!-- 💥 FIXED: Added an ID to the form to handle submission securely -->
-        <form id="loginForm" action="/my-secret-vault-99/login" method="post" class="space-y-4">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+       <!--  <form id="loginForm" method="POST" action="/{{ LOGIN_GATEWAY_URL }}?accpess_token={{ ADMIN_GATEWAY_TOKEN }}" class="space-y-4"> -->
+  <form id="loginForm"
+      method="POST"
+      action="/{{ settings.LOGIN_GATEWAY_URL }}?access_token={{ settings.ADMIN_GATEWAY_TOKEN }}"
+      class="space-y-4">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="email" name="email" id="emailInput" placeholder="Email" required class="w-full border p-4 rounded-lg">
             <input type="password" name="password" id="passwordInput" placeholder="Password" required class="w-full border p-4 rounded-lg">
             <button type="submit" class="w-full bg-black text-white py-4 rounded-lg">Login</button>
         </form>
 
-        <p class="text-center mt-4">No account? <a href="/auth/register" class="text-blue-600">Register</a></p>
+        <p class="text-center mt-4">No account? <a href="/{{ settings.REGISTER_GATEWAY_URL }}" class="text-blue-600">Register</a></p>
     </div>
 </div>
 
@@ -41,7 +45,9 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
             "Content-Type": "application/x-www-form-urlencoded",
             "X-CSRF-Token": token  // 👈 Sends the key right to our updated middleware
         },
-        body: formData.toString()
+        body: formData.toString(),
+        credentials: "include"
+
     });
 
     if (response.redirected) {

@@ -19,9 +19,9 @@ from app.core.database import get_db
 from datetime import datetime
 from app.core.security import hash_password, verify_password
 from app.models.user import User
+from app.core.config import settings 
 
-
-router = APIRouter(prefix="/my-secret-vault-99", tags=["Authentication"])
+router = APIRouter(prefix="", tags=["Authentication"])
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -39,16 +39,22 @@ def require_admin(user: User = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
-@router.get("/register")
+
+@router.get(f"/{settings.REGISTER_GATEWAY_URL}")
 async def register_page(request: Request):
     return request.app.state.render_with_csrf(
         templates_instance=templates, 
         request=request, 
-        template_name="auth/register.html")
+        template_name="auth/register.html",
+        context={
+            "settings": settings
+        }
+     )
 # ====================================================
 # SECURE FORM & OPTIONAL IMAGE REGISTRATION ROUTE
 # ====================================================
-@router.post("/register")
+#@router.post("/register")
+@router.post(f"/{settings.REGISTER_GATEWAY_URL}") 
 async def register_user(
     request: Request,
     db: Session = Depends(get_db)
@@ -95,21 +101,37 @@ async def register_user(
 
     db.add(user)
     db.commit()
+    return RedirectResponse(
+    url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+    status_code=303
+    )
+   # return RedirectResponse(f"/{settings.LOGIN_GATEWAY_URL}", status_code=303)
 
-    return RedirectResponse("/auth/login", status_code=303)
+#    return RedirectResponse("/auth/login", status_code=303)
 class LoginPayload(BaseModel):
     email: EmailStr
     password: str
     csrf_token: str
-@router.get("/login")
-async def login_page(request: Request):
+#@router.get("/login")
+
+@router.get(f"/{settings.LOGIN_GATEWAY_URL}")
+async def login_page(request: Request,access_token: str = None ):
+    # Dynamic parameter door-bell checking verification
+    if not access_token or access_token != settings.ADMIN_GATEWAY_TOKEN:
+        raise HTTPException(status_code=404) # Pretend the page doesn't exist completely
     #  Adding named keyword arguments ensures the token generates perfectly
     return request.app.state.render_with_csrf(
         templates_instance=templates,
         request=request,
-        template_name="auth/login.html"
+        template_name="auth/login.html",
+        context={
+            "settings": settings,
+            "LOGIN_GATEWAY_URL": settings.LOGIN_GATEWAY_URL,
+            "ADMIN_GATEWAY_TOKEN": settings.ADMIN_GATEWAY_TOKEN
+        }
     )
-@router.post("/login")
+#@router.post("/login")
+@router.post(f"/{settings.LOGIN_GATEWAY_URL}")
 async def login_user(
     request: Request,
     background_tasks: BackgroundTasks, # 💥 FIXED: Corrected spelling typo by removing the 'j'
@@ -118,14 +140,13 @@ async def login_user(
     db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.email == email).first()
-    
     # ✅ FIXED JINJA2 KEYWORDS: Explicit parameter names prevent parameter mixing and 403 loops
     if not user or not verify_password(password, user.password):
         return request.app.state.render_with_csrf(
             templates_instance=templates,
             request=request,
             template_name="auth/login.html",
-            context={"error": "Invalid email or password"}
+            context={"settings":settings,"error": "Invalid email or password"}
         )
 
     if not user.is_active:
@@ -133,7 +154,7 @@ async def login_user(
             templates_instance=templates,
             request=request,
             template_name="auth/login.html",
-            context={"error": "Account is disabled"}
+            context={"settings":settings,"error": "Account is disabled"}
         )
 
     # Establish secure session data trackers
@@ -156,7 +177,10 @@ async def logout(
     request: Request,
 ):
     request.session.clear()
-    response = RedirectResponse("/auth/login", status_code=303)
+    response = RedirectResponse(
+    url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+    status_code=303)
+  #  response = RedirectResponse("/auth/login", status_code=303)
 #    response.delete_cookie("access_token")
     response.delete_cookie(
         key="access_token",
@@ -194,7 +218,8 @@ async def users_page(
             "active_users": active_users,
             "disabled_users": disabled_users,
             "admins": admins,
-            "current_user": current_user
+            "current_user": current_user,
+            "settings":settings,
         }
     )
 @router.get("/edit/{user_id}")
@@ -213,7 +238,7 @@ async def edit_user_page(
         templates_instance=templates,
         request=request,
         template_name="dashboard/users/edit.html",
-        context={"user": user, "current_user": current_user}
+        context={"user": user,"settings":settings, "current_user": current_user}
     )
 @router.post("/update/{user_id}")
 async def update_user(
@@ -254,7 +279,7 @@ async def update_user(
     user.is_active = is_active
 
     db.commit()
-    return RedirectResponse("/auth/user", status_code=303)
+    return RedirectResponse("/user", status_code=303)
 
 
 @router.post("/delete/{user_id}")
@@ -275,7 +300,7 @@ async def delete_user(
 
     db.delete(user)
     db.commit()
-    return RedirectResponse("/auth/user", status_code=303)
+    return RedirectResponse("/user", status_code=303)
 
 @router.post("/toggle-status/{user_id}")
 async def toggle_user_status(
@@ -294,4 +319,4 @@ async def toggle_user_status(
 
     user.is_active = not user.is_active
     db.commit()
-    return RedirectResponse("/auth/user", status_code=303)
+    return RedirectResponse("user", status_code=303)

@@ -41,7 +41,7 @@
             <a href="/dashboard/subscribers" class="flex items-center gap-3 hover:bg-gray-800 p-4 rounded-xl">📧 Subscribers</a>
             
             <!-- Logout should be POST -->
-            <form id="logoutForm" onsubmit="handleLogout(event)" method="post" action="/auth/logout">
+            <form id="logoutForm" onsubmit="handleLogout(event)" method="post" action="/logout">
                 <input type="hidden" id="csrfToken"  name="csrf_token" value="{{ csrf_token }}">
                 <button type="submit" class="w-full flex items-center gap-3 bg-red-500 hover:bg-red-600 p-4 rounded-xl mt-10">
                     🚪 Logout
@@ -244,25 +244,32 @@ function toggleSidebar() {
 }
 async function handleLogout(event) {
     event.preventDefault();
-    
-    const token = document.getElementById('csrfToken').value;
-    
-    const response = await fetch('/auth/logout', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-Token': token
-        },
-    // Added this line to pass the form payload and prevent backend 422 errors
-        body: new FormData(document.getElementById('logoutForm'))
 
-    });
-    
-    if (response.redirected) {
-        window.location.href = response.url; // Follow the 303 redirection to /auth/login
-    } else if (response.ok) {
-        window.location.href = '/auth/login';
-    } else {
-        alert('Logout failed');
+    const token = document.getElementById("csrfToken").value;
+
+    try {
+        const response = await fetch("/logout", {
+            method: "POST",
+            headers: {
+                "X-CSRF-Token": token
+            },
+            credentials: "include",
+            body: new FormData(document.getElementById("logoutForm"))
+        });
+
+        console.log("Status:", response.status);
+
+        const text = await response.text();
+        console.log("Response:", text);
+
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            alert("Logout failed");
+        }
+
+    } catch (err) {
+        console.error(err);
     }
 }
 </script>

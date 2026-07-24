@@ -182,8 +182,9 @@ app.add_exception_handler(RateLimitExceeded, custom_rate_limit_handler)
 # =========================
 app.exception_handler(NotAuthenticated)
 def auth_redirect_handler(request: Request, exc: NotAuthenticated):
+    target_url = f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}"
 
-    return RedirectResponse(url="/my-secret-vault-99/login", status_code=302)
+    return RedirectResponse(url="target_url", status_code=302)
 # =========================
 # STATIC FILES
 # =========================
@@ -194,8 +195,6 @@ def create_upload_dirs():
     Path("app/static/uploads/music/audio").mkdir(parents=True, exist_ok=True)
     Path("app/static/uploads/videos").mkdir(parents=True, exist_ok=True)
     Path("app/static/uploads/news").mkdir(parents=True, exist_ok=True)
-#)
-#
 
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
