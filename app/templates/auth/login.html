@@ -13,7 +13,7 @@
        <!--  <form id="loginForm" method="POST" action="/{{ LOGIN_GATEWAY_URL }}?accpess_token={{ ADMIN_GATEWAY_TOKEN }}" class="space-y-4"> -->
   <form id="loginForm"
       method="POST"
-      action="/{{ LOGIN_GATEWAY_URL }}"
+      action="/{{ settings.LOGIN_GATEWAY_URL }}?access_token={{ settings.ADMIN_GATEWAY_TOKEN }}"
       class="space-y-4">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="email" name="email" id="emailInput" placeholder="Email" required class="w-full border p-4 rounded-lg">
@@ -39,8 +39,9 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
     formData.append("password", document.getElementById("passwordInput").value);
 
     // Send data to backend along with your strict CSRF Header verification token
-    const response = await fetch(form.action, {
-        method: "POST",
+    const response = await fetch(
+       "/{{ settings.LOGIN_GATEWAY_URL }}?access_token={{ settings.ADMIN_GATEWAY_TOKEN }}",
+       { method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
             "X-CSRF-Token": token  // 👈 Sends the key right to our updated middleware
