@@ -51,7 +51,7 @@
         <div class="rounded-2xl overflow-hidden shadow-xl border bg-gray-100">
             <!-- ✅ FIXED: Compiles the full static path to render your uploaded image flawlessly -->
             <img
-                src="{{ url_for('static', path='img/technician.jpg') }}"
+                src="static/uploads/team.jpg"
                 alt="Precision electrical engineering and code compilation workspace"
                 class="w-full h-[350px] md:h-[500px] object-cover"
             >
@@ -84,10 +84,10 @@
 <!-- TEAM / STORY -->
 <section class="max-w-7xl mx-auto px-4 py-16">
     <div class="grid lg:grid-cols-2 gap-10 items-center">
-        <!-- IMAGE -->
+        <!-- IMAGE 
         <div class="rounded-2xl overflow-hidden shadow-lg border">
             <img
-                src="{{ url_for('static', path='img/team.jpg') }}"
+            <!--    src="{{ url_for('static', path='img/team.jpg') }}" 
                 alt="Team working on system architecture modules"
                 class="w-full h-[300px] md:h-[450px] object-cover"
             >
