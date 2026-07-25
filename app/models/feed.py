@@ -1,21 +1,18 @@
-from sqlalchemy import text
-from app.core.database import engine
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, DateTime
+from app.core.database import Base  # Adjust this import to match your project structure
 
-def create_feed_view():
-    view_query = """
-    CREATE VIEW IF NOT EXISTS feed AS
-    SELECT id, 'news' AS type, title, created_at, image, slug, views FROM news
-    UNION ALL
-    SELECT id, 'video' AS type, title, created_at, NULL AS image, NULL AS slug, views FROM videos
-    UNION ALL
-    SELECT id, 'music' AS type, title, created_at, image, NULL AS slug, views FROM music;
-    """
-    with engine.begin() as connection:
-        try:
-            connection.execute(text(view_query))
-            print("Database unified feed view generated successfully.")
-        except Exception as e:
-            print(f"Error creating database view: {e}")
+class Feed(Base):
+    __tablename__ = "feed"
 
-if __name__ == "__main__":
-    create_feed_view()
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    source_id = Column(Integer, nullable=False)
+    type = Column(String, nullable=False)  # 'news', 'video', or 'music'
+    title = Column(String, nullable=False)
+    slug = Column(String, nullable=True)
+    content = Column(String, nullable=True)
+    media = Column(String, nullable=True)
+    video_file = Column(String, nullable=True)
+    music_file = Column(String, nullable=True)
+    views = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)

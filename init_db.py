@@ -30,9 +30,9 @@ def create_feed_view():
             INSERT INTO feed (id, title, slug, content, media, views, created_at, type, video_file, music_file)
             SELECT id, title, slug, content, image AS media, views, created_at, 'news' AS type, NULL AS video_file, NULL AS music_file FROM news
             UNION ALL
-            SELECT id, title, NULL AS slug, description AS content, NULL AS media, views, created_at, 'video' AS type, video_file, NULL AS music_file FROM video
+            SELECT id, title, NULL AS slug, description AS content, NULL AS media, views, created_at, 'videos' AS type, video_file, NULL AS music_file FROM videos
             UNION ALL
-            SELECT id, title, NULL AS slug, NULL AS content, image AS media, views, created_at, 'music' AS type, NULL AS video_file, music_file FROM music
+            SELECT id, title, NULL AS slug, NULL AS content, cover_image AS media, views, created_at, 'music' AS type, NULL AS video_file, music_file FROM music
             """
             connection.execute(text(insert_query))
             print("Successfully initialized physical 10-column feed table 🎉")
