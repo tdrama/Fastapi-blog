@@ -1,7 +1,7 @@
 from fastapi import Request, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.responses import RedirectResponse
-
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.user import User
 
@@ -44,15 +44,20 @@ def browser_admin_required(request: Request, db: Session = Depends(get_db)):
     user_id = request.session.get("user_id")
 
     if not user_id:
-        return RedirectResponse("/auth/login", status_code=303)
-
+        return RedirectResponse(
+        url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+        status_code=303)
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         request.session.clear()
-        return RedirectResponse("/auth/login", status_code=303)
 
+        return RedirectResponse(
+        url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+        status_code=303)
     if not user.is_active or not user.is_admin:
-        return RedirectResponse("/auth/login", status_code=303)
 
+        return RedirectResponse(
+        url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+        status_code=303)
     return user

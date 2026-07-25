@@ -279,7 +279,7 @@ async def update_user(
     user.is_active = is_active
 
     db.commit()
-    return RedirectResponse("/user", status_code=303)
+    return RedirectResponse(url="/user", status_code=303)
 
 
 @router.post("/delete/{user_id}")
@@ -300,7 +300,7 @@ async def delete_user(
 
     db.delete(user)
     db.commit()
-    return RedirectResponse("/user", status_code=303)
+    return RedirectResponse(url="/user", status_code=303)
 
 @router.post("/toggle-status/{user_id}")
 async def toggle_user_status(
@@ -319,4 +319,4 @@ async def toggle_user_status(
 
     user.is_active = not user.is_active
     db.commit()
-    return RedirectResponse("user", status_code=303)
+    return RedirectResponse(url="user", status_code=303)

@@ -184,7 +184,11 @@ app.exception_handler(NotAuthenticated)
 def auth_redirect_handler(request: Request, exc: NotAuthenticated):
     target_url = f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}"
 
-    return RedirectResponse(url="target_url", status_code=302)
+ #   return RedirectResponse(url="target_url", status_code=302)
+    return RedirectResponse(
+    url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+    status_code=302
+)
 # =========================
 # STATIC FILES
 # =========================

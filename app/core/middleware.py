@@ -1,6 +1,6 @@
 from fastapi import Request
 from fastapi.responses import RedirectResponse
-
+from app.core.config import settings
 
 class AuthMiddleware:
 
@@ -25,8 +25,8 @@ class AuthMiddleware:
 
             "/",
 
-            "/auth/login",
-
+            f"/{settings.LOGIN_GATEWAY_URL}",
+            f"/{settings.REGISTER_GATEWAY_URL}",
             "/auth/register",
 
             "/static",
@@ -57,10 +57,8 @@ class AuthMiddleware:
             if not user_id:
 
                 response = RedirectResponse(
-                    "/auth/login",
-                    status_code=302
-                )
-
+                url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+                status_code=302)
                 await response(scope, receive, send)
                 return
 

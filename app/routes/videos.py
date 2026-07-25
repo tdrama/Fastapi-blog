@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 from werkzeug.utils import secure_filename
-
+from app.core.config import settings
 # Database and Core Engine Dependency Models
 from app.core.database import get_db
 from app.core.limiter import limiter
@@ -66,8 +66,10 @@ async def admin_videos(request: Request, db: Session = Depends(get_db)):
 
     user_id = request.session.get("user_id")
     if not user_id:
-        return RedirectResponse(url="/auth/login", status_code=303)
-
+       # return RedirectResponse(url="/auth/login", status_code=303)
+        return RedirectResponse(
+        url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+        status_code=303)
     try:
         page = int(request.query_params.get("page", 1))
         if page < 1: page = 1
@@ -121,8 +123,10 @@ async def admin_videos(request: Request, db: Session = Depends(get_db)):
 async def create_video_page(request: Request, db: Session = Depends(get_db)):
     user_id = request.session.get("user_id")
     if not user_id:
-        return RedirectResponse(url="/auth/login", status_code=303)
-
+       # return RedirectResponse(url="/auth/login", status_code=303)
+        return RedirectResponse(
+        url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+        status_code=303)
     categories = db.query(Category).all()
     render_with_csrf = request.app.state.render_with_csrf
     return render_with_csrf(
@@ -276,8 +280,9 @@ async def edit_video_page(
     # Enforce admin credentials matching your dashboard architecture requirements
     user_id = request.session.get("user_id")
     if not user_id:
-        return RedirectResponse(url="/auth/login", status_code=303)
-
+        return RedirectResponse(
+        url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+        status_code=303)
     # ✅ FIXED INDENTATION: Query the database object first before checking constraints
     video = db.query(Video).filter(Video.id == video_id).first()
     
@@ -313,8 +318,9 @@ async def update_video_action(
     # Enforce credentials matching your dashboard architecture requirements
     user_id = request.session.get("user_id")
     if not user_id:
-        return RedirectResponse(url="/auth/login", status_code=303)
-
+        return RedirectResponse(
+        url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+        status_code=303)
     # Query the database object first before checking constraints
     video = db.query(Video).filter(Video.id == video_id).first()
     if not video:
