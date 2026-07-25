@@ -39,9 +39,7 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
     formData.append("password", document.getElementById("passwordInput").value);
 
     // Send data to backend along with your strict CSRF Header verification token
-    const response = await fetch(
-       "/{{ settings.LOGIN_GATEWAY_URL }}?access_token={{ settings.ADMIN_GATEWAY_TOKEN }}",
-       { method: "POST",
+    const response = await fetch(form.action,  { method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
             "X-CSRF-Token": token  // 👈 Sends the key right to our updated middleware
