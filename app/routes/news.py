@@ -148,6 +148,7 @@ def create_page(request: Request,db: Session = Depends(get_db)
 @router.post("/dashboard/news/create")
 async def create_news_article(
     request: Request,
+    background_tasks: BackgroundTasks, 
     db: Session = Depends(get_db)
 ):
     # SECURITY HANDLED: Global middleware loops already checked header validation parameters!
@@ -161,9 +162,15 @@ async def create_news_article(
     title = form_data.get("title")
     category_id_raw = form_data.get("category_id")
     content = form_data.get("content") # 👈 TinyMCE content parses smoothly as structured raw HTML strings here
-
+    tags = form_data.get("tags")
+    # Crucial Fix: Safely pull the uploaded file out of form data map
+    image = form_data.get("image")  
     if not title or not content or not category_id_raw:
         raise HTTPException(status_code=400, detail="Missing required field property keys")
+    try:
+        category_id = int(category_id_raw)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid category ID format")
 
     # Proceed with saving your data variables straight into your SQL model parameters blocks...
 
@@ -172,7 +179,7 @@ async def create_news_article(
     existing_slug = db.query(News).filter(News.slug == slug).first()
 
     if existing_slug:
-        slug = f"{slug}-{uuid4().hex[:6]}"
+       slug = f"{slug}-{uuid4().hex[:6]}"
     clean_content = sanitize_html(content or "")
 
     image_path = None
@@ -180,7 +187,7 @@ async def create_news_article(
     image_size = 0
 
     # ---------------- IMAGE UPLOAD ----------------
-    if image and image.filename:
+    if image and isinstance(image, UploadFile) and image.filename:
         safe_name = secure_filename(image.filename)
         ext = os.path.splitext(safe_name)[1].lower()
 
@@ -311,7 +318,23 @@ async def update_news(
 
         if ext not in ALLOWED_IMAGES:
             raise HTTPException(status_code=400, detail="Invalid image format")
+        new_image_hash = generate_file_hash(image.file)  
+        
+        # Check duplicate hash only if it's completely different from its current old image
+        if new_image_hash != news.image_hash:
+            existing_image = db.query(News).filter(News.image_hash == new_image_hash).first()  
+            if existing_image:  
+                raise HTTPException(status_code=400, detail="Image content already exists on another post")  
 
+            # Delete old image physical asset from disk if it exists
+            if news.image:
+                old_file_relative = news.image.lstrip("/")
+                old_file_path = os.path.join("app", old_file_relative) if not old_file_relative.startswith("app/") else old_file_relative
+                if os.path.exists(old_file_path):
+                    try:
+                        os.remove(old_file_path)
+                    except Exception:
+                        pass # 
         if news.image:
             old_file = f"app{news.image}"
             if os.path.exists(old_file):
@@ -325,6 +348,7 @@ async def update_news(
             shutil.copyfileobj(image.file, buffer)
 
         news.image = f"/static/uploads/news/{filename}"
+        news.image_hash = new_image_hash
         news.image_size = os.path.getsize(file_path)
 
     db.commit()
