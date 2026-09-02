@@ -20,6 +20,7 @@ class Video(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     title = Column(String(255), nullable=False)
+    slug = Column( String(255),unique=True,index=True,nullable=True)
     description = Column(Text, nullable=True)
 
     video_file = Column(String(1000), nullable=False)
@@ -30,7 +31,7 @@ class Video(Base):
     duration = Column(Float, default=0)
     thumbnail = Column(String(1000), nullable=True)
     file_hash = Column(String(255), unique=True, nullable=True)
-
+    embed_url = Column(String(500), nullable=True)
     views = Column(Integer, default=0)
     downloads = Column(Integer, default=0)
 

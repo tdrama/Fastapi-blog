@@ -11,13 +11,13 @@ class Music(Base):
     title = Column(String(255), nullable=False)
     artist = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
-
+    slug = Column(String(255), unique=True, nullable=False, index=True)
     music_file = Column(String(500), nullable=False)
     cover_image = Column(String(500), nullable=True)
 
     file_size = Column(BigInteger, default=0)
     file_size_display = Column(String(50), nullable=True)
-
+    
     duration = Column(Integer, default=0)
 
     views = Column(Integer, default=0)
@@ -30,7 +30,7 @@ class Music(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     downloads = Column(Integer, default=0)
-
+    embed_url = Column(String(500), nullable=True)
     # =========================
     # RELATIONSHIPS
     # =========================

@@ -1,6 +1,4 @@
-from fastapi import (
-    APIRouter, Request, Depends, Form, UploadFile, File, BackgroundTasks, HTTPException
-)
+from fastapi import ( APIRouter, Request, Depends, Form, UploadFile, File, BackgroundTasks, HTTPException)
 import magic
 import aiofiles  # Make sure to install aiofiles via pip
 from werkzeug.utils import secure_filename
@@ -12,6 +10,7 @@ from app.models.subscriber import Subscriber
 from app.services.email_service import send_email
 from app.models.category import Category
 import os
+from slugify import slugify
 import uuid
 # Database and App Configuration Imports
 from app.core.database import get_db
@@ -33,19 +32,22 @@ UPLOAD_DIR_COVERS = "app/static/uploads/music/covers"
 os.makedirs(UPLOAD_DIR_AUDIO, exist_ok=True)
 os.makedirs(UPLOAD_DIR_COVERS, exist_ok=True)
 
-ALLOWED_AUDIO = [".mp3", ".wav", ".ogg", ".m4a", ".aac", ".flac"]
+ALLOWED_AUDIO = [".mp3", ".wav", ".ogg", ".m4a", ".aac", ".flac", ".x-wav"]
 ALLOWED_IMAGES = [".jpg", ".jpeg", ".png", ".webp"]
 def generate_file_hash(file):
     hasher = hashlib.sha256()
-    pos = file.tell()  # save current position
-    
-    file.seek(0)
-    for chunk in iter(lambda: file.read(4096), b""):
-        hasher.update(chunk)
-    
-    file.seek(pos)  # restore position
-    return hasher.hexdigest()
+    pos = file.tell()
 
+    file.seek(0)
+
+    while True:
+        chunk = file.read(1024 * 1024)  # 1 MB chunks
+        if not chunk:
+            break
+        hasher.update(chunk)
+
+    file.seek(pos)
+    return hasher.hexdigest()
 def format_file_size(size_bytes):
     if size_bytes >= 1024 ** 3:
         return f"{round(size_bytes / 1024 ** 3, 2)} GB"
@@ -57,14 +59,14 @@ def format_file_size(size_bytes):
 
 @router.get("")
 def music_page(
-    request: Request, 
+    request: Request,
     db: Session = Depends(get_db)
 ):
-    
+
     # 1. Extract current page parameter safely out of the browser URL query state
     try:
         page = int(request.query_params.get("page", 1))
-        if page < 1: 
+        if page < 1:
             page = 1
     except (ValueError, TypeError):
         page = 1
@@ -81,7 +83,7 @@ def music_page(
         .limit(per_page)
         .all()
     )
-    
+
     # 3. Aggregate tracking parameters metric metrics
     total_musics = db.query(Music).count()
     categories = db.query(Category).all()
@@ -89,7 +91,7 @@ def music_page(
     total_pages = (total_musics + per_page - 1) // per_page
     if total_pages < 1:
         total_pages = 1
-        
+
     has_prev = page > 1
     has_next = page < total_pages
 
@@ -131,18 +133,39 @@ async def create_music(
     title: str = Form(...),
     artist: str = Form(...),
     category_id: int = Form(...),
-    music: UploadFile = File(...),
+    music: UploadFile = File(None),
     description: str = Form(None),
+    embed_url: str = Form(None),
     cover_image: UploadFile = File(None),
     db: Session = Depends(get_db),
 ):
     user_id = request.session.get("user_id")
     if not user_id:
         raise HTTPException(401, "Login required")
+    if embed_url:
+        audio_url = None
+        file_hash = None
+        file_size = 0
+        file_size_display = "0 Bytes"
+    
+    # -------------------------------------
+    # EMBED MODE
+    # -------------------------------------
+    if embed_url and embed_url.strip():
+        embed_url = embed_url.strip()
+
+    # -------------------------------------
+    # FILE UPLOAD MODE
+    # -------------------------------------
+    elif music and music.filename:
 
     # 🔑 FIXED: Restored the tuple slice [1] so splitext doesn't cause a tuple error
-    ext = os.path.splitext(music.filename)[1].lower()
-
+        ext = os.path.splitext(music.filename)[1].lower()
+    else:
+        raise HTTPException(
+        status_code=400,
+        detail="Please upload a music file or provide an embed URL."
+    )
     if ext not in ALLOWED_AUDIO:
         raise HTTPException(400, f"Invalid audio format extension: {ext}")
 
@@ -151,23 +174,23 @@ async def create_music(
     # ====================================================
     # 1. Read file headers asynchronously
     header_bytes = await music.read(2048)
-    await music.seek(0)  
+    await music.seek(0)
 
     # 2. Extract and validate MIME headers cleanly
     mime = magic.from_buffer(header_bytes, mime=True)
-    
+
     # 🔑 FIXED: Added 'application/octet-stream' to allow raw stream uploads sent by JavaScript FormData
     ALLOWED_MIMES = [
-        "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", 
+        "audio/mpeg","audio/x-wav", "audio/wav", "audio/ogg", "audio/mp4",
         "audio/aac", "audio/flac", "application/octet-stream"
     ]
-    
+
     if mime not in ALLOWED_MIMES:
         raise HTTPException(400, f"Invalid file type: detected {mime}")
 
     # 3. Generate and check file hash securely
     file_hash = generate_file_hash(music.file)
-    music.file.seek(0)  
+    music.file.seek(0)
 
     existing = db.query(Music).filter(Music.file_hash == file_hash).first()
     if existing:
@@ -176,21 +199,23 @@ async def create_music(
     # 4. Stream and write the media asset file to hard disk space
     audio_filename = f"{uuid4()}{ext}"
     audio_path = os.path.join(UPLOAD_DIR_AUDIO, audio_filename)
-
     with open(audio_path, "wb") as buffer:
-        shutil.copyfileobj(music.file, buffer)
+        shutil.copyfileobj(music.file, buffer, length=1024 * 1024)
+   # with open(audio_path, "wb") as buffer:
+     #   shutil.copyfileobj(music.file, buffer)
 
     audio_url = f"music/audio/{audio_filename}"
     file_size = os.path.getsize(audio_path)
     # ======================
     # COVER IMAGE
     # ======================
+    slug = f"{slugify(title.strip())}-{uuid4().hex[:8]}"
     cover_url = None
 
     if cover_image and cover_image.filename:
         safe_cover = secure_filename(cover_image.filename)
         img_ext = os.path.splitext(safe_cover)[1].lower()
-
+        
         if img_ext not in ALLOWED_IMAGES:
             raise HTTPException(400, "Invalid image format")
 
@@ -201,15 +226,16 @@ async def create_music(
             shutil.copyfileobj(cover_image.file, buffer)
 
         cover_url = f"music/covers/{cover_filename}"
-
     # ======================
     # SAVE DB
     # ======================
     new_music = Music(
         title=title.strip(),
         artist=artist.strip(),
+        slug=slug,
         description=description.strip() if description else None,
         music_file=audio_url,
+        embed_url=embed_url.strip() if embed_url else None,
         cover_image=cover_url,
         file_size=file_size,
         file_size_display=format_file_size(file_size),
@@ -217,7 +243,7 @@ async def create_music(
         user_id=int(user_id),
         category_id=category_id
     )
-    
+
     db.add(new_music)
     db.commit()
     db.refresh(new_music)
@@ -247,25 +273,22 @@ def edit_music(music_id: int, request: Request,db: Session = Depends(get_db)):
         template_name="dashboard/music/edit.html",
         context={
             "music": music,
-            "categories": categories
-        }
-    )
+            "categories": categories } )
 @router.post("/update/{music_id}")
 async def update_music(
-    music_id: int, 
+    music_id: int,
     request: Request,
-    title: str = Form(...), 
+    title: str = Form(...),
     artist: str = Form(...),
+    embed_url: str = Form(None),
     description: str = Form(None),
     music_file: UploadFile = File(None),
     cover_image: UploadFile = File(None),
-    db: Session = Depends(get_db)
-):
+    db: Session = Depends(get_db,)):          
     # 1. Access Control Validation
     user_id = request.session.get("user_id")
     if not user_id:
-        raise HTTPException(401, "Login required")
-
+        raise HTTPException(401, "Login required")         
     music = db.query(Music).filter(Music.id == music_id).first()
     if not music:
         raise HTTPException(404, "Music record not found")
@@ -274,7 +297,9 @@ async def update_music(
 
     # 2. Update metadata text properties
     music.title = title.strip()
+    music.slug = f"{slugify(title.strip())}-{uuid4().hex[:8]}"
     music.artist = artist.strip()
+    music.embed_url = embed_url.strip() if embed_url else None
     music.description = description.strip() if description else None
 
     # Lists to clean up if database commit crashes downstream
@@ -295,12 +320,12 @@ async def update_music(
 
         secure_audio_name = f"{uuid4().hex}{ext}"
         audio_save_path = os.path.join(UPLOAD_DIR_AUDIO, secure_audio_name)
-        
+
         # Async writing pipeline via 1MB stream chunks
         async with aiofiles.open(audio_save_path, "wb") as out_file:
             while chunk := await music_file.read(1024 * 1024):
                 await out_file.write(chunk)
-        
+
         new_files_written.append(audio_save_path)
 
         # Map reference paths cleanly (omitting parent /static prefix)
@@ -326,7 +351,7 @@ async def update_music(
 
         secure_img_name = f"{uuid.uuid4().hex}{img_ext}"
         img_save_path = os.path.join(UPLOAD_DIR_COVERS, secure_img_name)
-        
+
         async with aiofiles.open(img_save_path, "wb") as out_file:
             while chunk := await cover_image.read(1024 * 1024):
                 await out_file.write(chunk)
@@ -341,7 +366,7 @@ async def update_music(
         db.rollback()
         # Clean up disk leakage variations if database record indexing snaps
         for path in new_files_written:
-            if os.path.exists(path): 
+            if os.path.exists(path):
                 os.remove(path)
         raise HTTPException(500, "Database processing transaction execution failure.")
 
@@ -359,63 +384,27 @@ async def delete_music(
     user_id = request.session.get("user_id")
     if not user_id:
         raise HTTPException(401, "Login required")
-
     music = db.query(Music).filter(Music.id == music_id).first()
+
     if not music:
         raise HTTPException(404, "Music not found")
     if music.user_id != user_id:
         raise HTTPException(403, "Not allowed")
     if music.music_file:
         path = os.path.join("app", music.music_file.lstrip("/"))
-        if os.path.exists(path):
-            os.remove(path)
+    if os.path.exists(path):
+        os.remove(path)
     if music.cover_image:
-        path = os.path.join("app", music.cover_image.lstrip("/"))
-        if os.path.exists(path):
-            os.remove(path)
+        path = os.path.join("app", music.cover_image.lstrip("/")) 
+    if os.path.exists(path):
+        os.remove(path)
 
     db.delete(music)
     db.commit()
-
-    return RedirectResponse("/dashboard/music", status_code=302)
- # ====================================================
+    return RedirectResponse("/dashboard/music", status_code=302)  
+      # ====================================================
  # Download MUSIC
  # ====================================================
-@router.get("/download/{music_id}")
-def download_music(music_id: int, request: Request, db: Session = Depends(get_db)):
-    music = db.query(Music).filter(Music.id == music_id).first()
-    if not music:
-        raise HTTPException(404, "Music not found")
-
-    safe_name = os.path.basename(music.music_file)
-    file_path = os.path.join(
-        "app/static/uploads/music/audio", 
-         safe_name)
-
-    if not os.path.exists(file_path):
-        raise HTTPException(404, "Audio file not found")
-
-    db.execute(
-        update(Music)
-      .where(Music.id == music_id)
-      .values(downloads=Music.downloads + 1) # fixed: downloads not views
-    )
-
-    log = StreamLog(
-        user_id=request.session.get("user_id"),
-        content_type="music_download",
-        content_id=music.id,
-        ip_address=hashlib.sha256(request.client.host.encode()).hexdigest()
-    )
-    db.add(log)
-    db.commit()
-
-    return FileResponse(
-        path=file_path,
-        filename=f"{music.title}{os.path.splitext(safe_name)[1]}",
-        media_type="audio/mpeg",
-        filename_compat="utf-8"
-    )
 
  # ====================================================
  # track MUSIC
@@ -439,28 +428,81 @@ def track_music_play(music_id: int, request: Request, db: Session = Depends(get_
 # ====================================================
 # MUSIC DETAILS PAGE
 # ====================================================
-
+# ====================================================
 @router.get("/{music_id}")
 def music_detail(music_id: int, request: Request, db: Session = Depends(get_db)):
     music = db.query(Music).options(joinedload(Music.comments)).filter(Music.id == music_id).first()
     if not music:
         raise HTTPException(404, "Music not found")
 
-    db.execute(update(Music).where(Music.id == music_id).values(views=Music.views + 1))
-    db.commit()
-    db.refresh(music)
+    comments = music.comments if music.comments else []
+    related_music = db.query(Music).filter(Music.id != music.id).limit(4).all()
+
+    # 🔒 PHASE 1: HARDENED DEDUPLICATED IP RESOLUTION & HASHING
+    ip_raw = request.headers.get("CF-Connecting-IP") or request.headers.get("X-Real-IP") or request.client.host
+    # Safely isolate the client IP from proxy chain lists to prevent list encoding errors
+    ip_str = str(ip_raw).split(",")[0].strip()
+    hashed_ip = hashlib.sha256(ip_str.encode("utf-8")).hexdigest()
+
+    # 🔒 PHASE 2: DEFENSIVE LEDGER QUERY BOUNDARIES
+    session_user_id = request.session.get("user_id")
+    view_query = db.query(StreamLog).filter(
+        StreamLog.content_type == "music_view",
+        StreamLog.content_id == music.id
+    )
+    
+    if session_user_id:
+        already_viewed = view_query.filter(
+            (StreamLog.ip_address == hashed_ip) | (StreamLog.user_id == session_user_id)
+        ).first()
+    else:
+        already_viewed = view_query.filter(StreamLog.ip_address == hashed_ip).first()
+
+    # 🔒 PHASE 3: IMMUTABLE INCREMENTATION LOCK
+    if not already_viewed:
+        music.views = (music.views or 0) + 1
+        log = StreamLog(
+            user_id=session_user_id,
+            content_type="music_view",
+            content_id=music.id,
+            ip_address=hashed_ip
+        )
+        db.add(log)
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+    else:
+        db.refresh(music)
+
+    # 🔒 PHASE 4: SECURE DYNAMIC LINK PREVIEW ROUTING METRICS
+    if music.cover_image:
+        meta_image = f"https://therealbam.com{music.cover_image}"
+    else:
+        meta_image = "https://therealbam.com"
+
     return request.app.state.render_with_csrf(
         templates_instance=templates,
         request=request,
         template_name="frontend/music_detail.html",
         context={
-            "music": music
+            "music": music,
+            "comments": comments,
+            "related_music": related_music,
+            "meta_title": music.title,
+            "meta_description": (
+                music.description[:160]
+                if music.description
+                else "Listen to this tracks natively on BAM-Tech."
+            ),
+            "meta_image": meta_image
         }
     )
-
-# ====================================================                                  # FRONTEND MUSIC PAGE
 # ====================================================
 
+# ====================================================
+  # FRONTEND MUSIC PAGE
+# ====================================================
 @router.get("/frontend")
 def frontend_music(request: Request, db: Session = Depends(get_db)):
     musics = db.query(Music).options(joinedload(Music.comments)).order_by(Music.id.desc()).all()
@@ -470,19 +512,19 @@ def frontend_music(request: Request, db: Session = Depends(get_db)):
         template_name="frontend/music.html",
         context={
             "musics": musics
-        }
-    )
+        })
 # ====================================================
 # ADD MUSIC COMMENT
 # NORMAL FORM POST
 # ====================================================
 
 @router.post("/{music_id}/comment")
-async def add_music_comment(music_id: int, request: Request, db: Session = Depends(get_db)):
+async def add_music_comment(music_id: int, request: Request, db:Session = Depends(get_db)):
     music = db.query(Music).filter(Music.id == music_id).first()
     if not music:
         raise HTTPException(404, "Music not found")
-    comment = Comment(name=form.get("name"), content=form.get("content"), music_id=music_id)
+    comment = Comment(name=form.get("name"),
+    content=form.get("content"), music_id=music_id)
     db.add(comment)
     db.commit()
     return RedirectResponse("/dashboard/music/frontend", status_code=303)
@@ -501,7 +543,6 @@ def add_music_comment_json(
 
     if not music:
         raise HTTPException(status_code=404, detail="Music not found")
-    
     comment = Comment(name=name, content=content, music_id=music_id)
     db.add(comment)
     db.commit()
@@ -523,7 +564,6 @@ def stream_music(music_id: int, db: Session = Depends(get_db)):
 
     filename = os.path.basename(music.music_file)
     file_path = os.path.join("app/static/uploads/music/audio", filename)
-
     return FileResponse(
         file_path,
         media_type="audio/mpeg"

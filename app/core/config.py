@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     ADMIN_GATEWAY_TOKEN: str = "default_token"
     SESSION_COOKIE: str = "session_tracker"
     ENV: str = "development"
+    BREVO_API_KEY: str = ""
+    EMAIL_ADDRESS: str = ""
+    EMAIL_FROM_NAME: str = "Bamtech"
 
     model_config = SettingsConfigDict(
         env_file=".env", 

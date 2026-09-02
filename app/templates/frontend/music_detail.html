@@ -1,228 +1,152 @@
-{% extends "base.html" %}
+{% extends "frontend/base.html" %}
 
 {% block title %}
-{{ music.title }}
+{{ music.title }} | BamTech
 {% endblock %}
 
 {% block content %}
- <!--================= MUSIC ================= -->            
-<div class="max-w-4xl mx-auto py-10">
+<!--================= MAIN DETAILED MUSIC CARD GRID ================= -->
+<div class="max-w-4xl mx-auto py-10 px-4">
 
-    <div class="bg-white shadow rounded-xl overflow-hidden">
+    <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
 
-        <!-- COVER -->
+        <!-- COVER MEDIA WRAPPER -->
         {% if music.cover_image %}
-           
-       <img src="{{ url_for('static', path='uploads/' ~ music.cover_image) }}"
-        <class="w-full h-56 object-cover">
-            >
+        <img src="{{ url_for('static', path='uploads/' ~ music.cover_image) }}" class="w-full h-64 object-contain bg-gray-50" alt="{{ music.title | e }}">
         {% else %}
-            <img
-                src="/static/img/music_default.jpg"
-                class="w-full h-56 object-cover"
-                alt="default"
-            >
+        <img src="/static/img/music_default.jpg" class="w-full h-64 object-contain bg-gray-50" alt="Default Cover">
         {% endif %}
 
-        <div class="p-6">
+        <div class="p-8">
+            <!-- TITLE & ARTIST LAYER -->
+            <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">{{ music.title | e }}</h1>
+            <p class="text-blue-600 font-semibold mt-2 text-lg">Artist: {{ music.artist | e }}</p>
 
-            <!-- TITLE -->
-            <h1 class="text-4xl font-bold">
-                {{ music.title | e }}
-            </h1>
-
-            <!-- ARTIST -->
-            <p class="text-gray-600 mt-2">
-                Artist: {{ music.artist | e }}
-            </p>
-
-            <!-- STATS -->
-            <div class="mt-4 flex gap-6 text-gray-700">
-
-                <span>👁 {{ music.views or 0 }} Views</span>
-                <span>⬇ {{ music.downloads or 0 }} Downloads</span>
+            <!-- REAL-TIME TRACKING STATS METRICS BAR -->
+            <div class="mt-4 flex flex-wrap gap-6 text-sm font-medium text-gray-500 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <span>👁 {{ music.views or 0 }} Plays</span>
+                <span class="download-counter-text">⬇️ {{ music.downloads or 0 }} Downloads</span>
                 <span>💬 {{ music.comments|length if music.comments else 0 }} Comments</span>
-
             </div>
 
-            <!-- DESCRIPTION -->
-            <div class="mt-6 text-gray-700">
-                {{ music.description | e }}
+            <!-- TRACK DESCRIPTION COMPONENT -->
+            <div class="mt-6 text-gray-700 leading-relaxed break-words">
+                {{ music.description | e if music.description else '' }}
             </div>
 
-            <!-- AUDIO -->
+            <!-- AUDIO PLAYER GATEWAY COMPONENT -->
+            <div class="mt-8 bg-gray-50 p-4 rounded-xl border">
+                {% if music.music_file %}
+                <!-- Direct Local Stream audio tag layout elements -->
+                <audio controls controlsList="nodownload" class="w-full h-10 opacity-90 focus:opacity-100 transition" preload="metadata">
+                    <source src="{{ url_for('static', path='uploads/' ~ music.music_file) }}" type="audio/mpeg">
+                    Your browser does not support audio playback.
+                </audio>
+                {% elif music.embed_url %}
+                <!-- Embedded Iframe third-party streaming sandbox block -->
+                <div class="w-full h-16 overflow-hidden rounded-xl border border-gray-100 bg-white">
+                    <iframe src="{{ music.embed_url }}" 
+                            class="w-full h-full border-0" 
+                            allow="encrypted-media"
+                            sandbox="allow-scripts allow-same-origin allow-popups-to-escape-sandbox allow-forms"></iframe>
+                </div>
+                {% else %}
+                <p class="text-gray-400 font-medium text-sm italic text-center">No audio tracking streams attached to this record.</p>
+                {% endif %}
+            </div>
+
+            <!-- ✅ FIXED: Download tracks cleanly using verified Slug values instead of raw IDs -->
+            {% if music.music_file %}
             <div class="mt-6">
-        <!--        <audio controls class="w-full">
-                    <source src="/static/uploads/music/{{ music.music_file }}" type="audio/mpeg">
-                </audio>-->
-           <audio controls class="w-full">
-    {% if music.music_file %}
-<source src="{{ url_for('static', path='uploads/' ~ music.music_file) }}">
-    {% endif %}
-</audio>
+                <a href="/music/download/{{ music.slug }}" class="w-full sm:w-auto inline-flex justify-center items-center bg-black hover:bg-gray-800 text-white px-8 py-3.5 rounded-xl text-sm font-semibold transition tracking-wide shadow-md dynamic-download-detail-btn">
+                    Download Track
+                </a>
             </div>
+            {% endif %}
 
-            <!-- DOWNLOAD BUTTON (FIXED ROUTE) -->
-            <div class="mt-6">
-               <!-- <a
-                    href="/music/download/{{ music.id }}"
-                    class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded"
-                >
-                    Download Music
-                </a> -->
-             
-                 {% if music.file_exists %}
-                 <a href="/music/download/{{ music.id }}"
-                    class="mt-3 inline-block bg-black text-white px-4 py-2 rounded-lg">
-                     Download
-                 </a>
-
-                 {% endif %}
+            <!-- SHAREABLE CONTENT CARD ELEMENT -->
+            <div class="mt-8 border-t pt-6">
+                <h3 class="text-sm font-bold text-gray-800 mb-2">Share this Track</h3>
+                <div class="flex gap-2 max-w-md">
+                    <input id="share-link" type="text" value="{{ request.url }}" readonly class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none text-gray-500 select-all">
+                    <button onclick="copyLink()" class="bg-gray-900 hover:bg-black text-white px-5 rounded-xl text-sm font-semibold transition shrink-0 shadow-sm">
+                        Copy Link
+                    </button>
+                </div>
             </div>
-
-            <!-- SHARE -->
-            <div class="mt-6">
-              
-          <!-- Share Link -->
-          
-              <input id="share-link"
-                     type="text"
-                     value="{{ request.url }}"
-                     readonly
-                     class="flex-1 border-gray-300 rounded-l->
-              <button onclick="copyLink()"
-                      class="bg-gray-800 hover:bg-gray-900 te>
-                  Copy
-              </button>
-          </div>
         </div>
     </div>
 
-    <!-- COMMENTS -->
-    <div class="mt-10 bg-white shadow rounded-xl p-6">
-
-        <h2 class="text-2xl font-bold mb-4">Comments</h2>
-
-        <!-- FIXED COMMENT ROUTE -->
-        <form id="publicCommentForm"
-            action="/music/{{ music.id }}/comment"
-            method="POST"
-            class="space-y-4"
-        >
-
+    <!-- COMMENTS WORKSPACE -->
+    <div class="mt-10 bg-white shadow-xl rounded-2xl p-6 border border-gray-100">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Comments ({{ music.comments|length if music.comments else 0 }})</h2>
+        
+        <!-- ✅ FIXED: Comments point back to dynamic ID structures properly -->
+        <form id="publicCommentForm" action="/music/{{ music.id }}/comment" method="POST" class="space-y-4 mb-8">
+            {% if csrf_token %}
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-
-            <input
-                type="text"
-                name="name"
-                placeholder="Your name"
-                required
-                class="w-full border p-3 rounded"
-            >
-
-            <textarea
-                name="content"
-                placeholder="Write comment..."
-                required
-                class="w-full border p-3 rounded"
-            ></textarea>
-
-            <button
-                type="submit"
-                class="bg-blue-600 text-white px-5 py-3 rounded"
-            >
+            {% endif %}
+            <input type="text" name="name" placeholder="Your name" required class="w-full border rounded-xl px-4 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 border-gray-200">
+            <textarea name="content" rows="3" placeholder="Write comment..." required class="w-full border rounded-xl px-4 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 border-gray-200 resize-none"></textarea>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
                 Post Comment
             </button>
-
         </form>
 
-        <!-- COMMENT LIST -->
-        <div class="mt-8">
-
+        <!-- LIVE TIMELINE CONTAINER ROW -->
+        <div class="space-y-4 max-h-[450px] overflow-y-auto pr-1">
             {% for comment in music.comments %}
-
-            <div class="border-b py-4">
-
-                <h3 class="font-bold">
-                    {{ comment.name | e }}
-                </h3>
-
-                <p>
-                    {{ comment.content | e }}
-                </p>
-
+            <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl text-sm break-words shadow-sm">
+                <div class="flex justify-between text-xs text-gray-500 mb-1.5">
+                    <strong class="text-gray-800 text-sm font-bold">{{ comment.name | e }}</strong>
+                    <span>{{ comment.created_at.strftime('%d %b %H:%M') if comment.created_at else '' }}</span>
+                </div>
+                <p class="text-gray-600 leading-relaxed text-sm">{{ comment.content | e }}</p>
             </div>
-
             {% else %}
-
-            <p class="text-gray-400">No comments yet</p>
-
+            <p class="text-gray-400 italic text-center py-4 text-sm">No comments yet. Be the first to reply!</p>
             {% endfor %}
-
         </div>
-
     </div>
-
 </div>
 
- 
-  <script>
-  function copyLink() {
-      const input = document.getElementById('share-link');
-      input.select();
-      input.setSelectionRange(0, 99999); // for mobile
-      navigator.clipboard.writeText(input.value).then(() => {
-          alert('Link copied!');
-     });
- }
-
-// 1. LINK SHARING CLIPBOARD SYSTEM
+<!-- CLIENT JAVASCRIPT ANIMATIONS & EVENT LIFECYCLES -->
+<script>
 function copyLink() {
-    const input = document.getElementById('share-link');
-    if (input) {
-        input.select();
-        input.setSelectionRange(0, 99999); // Safe compliance layer for older mobile devices
-        navigator.clipboard.writeText(input.value).then(() => {
+    const linkInputNode = document.getElementById('share-link');
+    if (linkInputNode) {
+        linkInputNode.select();
+        linkInputNode.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(linkInputNode.value).then(() => {
             alert('Share link copied to clipboard!');
         });
     }
 }
 
-// 2. REFRESHLESS PUBLIC COMMENT ROUTING SYSTEM
-const commentForm = document.getElementById("publicCommentForm");
-if (commentForm) {
-    commentForm.addEventListener("submit", async function(e) {
-        e.preventDefault(); // Stop standard browser page updates
-        
+// ASYNCHRONOUS SECURE COMMENT INTERACTION PROCESSING
+const commentFormNode = document.getElementById("publicCommentForm");
+if (commentFormNode) {
+    commentFormNode.addEventListener("submit", async function(e) {
+        e.preventDefault();
         const form = e.target;
-        // Extracts the token directly from the hidden input field element securely
-        const token = form.querySelector('input[name="csrf_token"]').value;
-        const formData = new FormData(form);
-
+        const dataPayload = new FormData(form);
+        
         try {
-            const response = await fetch(form.action, {
+            const res = await fetch(form.action, {
                 method: "POST",
-                headers: {
-                    "X-CSRF-Token": token // ✅ SATISFIES THE ROOT MIDDLEWARE HEADERS ENGINE
-                },
-                body: formData,
+                body: dataPayload,
                 credentials: "include"
             });
-
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else if (response.ok) {
-                window.location.reload(); // Instantly update view tracking grids safely upon success
+            if (res.ok) {
+                window.location.reload();
             } else {
-                const data = await response.json().catch(() => ({}));
-                alert(data.detail || "Error: Failed to register comment.");
+                alert("Could not register comment. Please verify submission format.");
             }
         } catch (err) {
-            console.error(err);
-            alert("A network transaction failure occurred while posting your comment.");
+            console.error("Comment lifecycle error:", err);
+            alert("Network connection error. Please try again.");
         }
     });
 }
-
 </script>
 {% endblock %}

@@ -39,7 +39,16 @@ templates = Jinja2Templates(directory="app/templates")
 # UPLOAD CONFIG
 # ====================================================
 UPLOAD_DIR = "app/static/uploads/news"
+EDITOR_MEDIA_DIR = "app/static/uploads/news/editor"
+
+EDITOR_IMAGE_DIR = os.path.join(EDITOR_MEDIA_DIR, "images")
+EDITOR_VIDEO_DIR = os.path.join(EDITOR_MEDIA_DIR, "videos")
+EDITOR_PDF_DIR = os.path.join(EDITOR_MEDIA_DIR, "pdf")
+
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(EDITOR_IMAGE_DIR, exist_ok=True)
+os.makedirs(EDITOR_VIDEO_DIR, exist_ok=True)
+os.makedirs(EDITOR_PDF_DIR, exist_ok=True)
 
 ALLOWED_IMAGES = [".jpg", ".jpeg", ".png", ".webp", ".avif"]
 
@@ -104,7 +113,7 @@ def news_page(
     total_pages = (total_news + per_page - 1) // per_page
     if total_pages < 1:
         total_pages = 1
-        
+ 
     has_prev = page > 1
     has_next = page < total_pages
 
@@ -144,86 +153,327 @@ def create_page(request: Request,db: Session = Depends(get_db)
 # ====================================================
 # CREATE NEWS
 # ====================================================
-
 @router.post("/dashboard/news/create")
 async def create_news_article(
     request: Request,
-    background_tasks: BackgroundTasks, 
+    background_tasks: BackgroundTasks,
+    title: str = Form(...),
+    category_id: int = Form(...),
+    content: str = Form(...),
+    tags: str = Form(None),
+    image: UploadFile = File(None),
     db: Session = Depends(get_db)
 ):
-    # SECURITY HANDLED: Global middleware loops already checked header validation parameters!
-    
+    # ====================================================
+    # AUTHENTICATION
+    # ====================================================
+
     user_id = request.session.get("user_id")
+
     if not user_id:
-        raise HTTPException(status_code=401, detail="Login required")
+        raise HTTPException(
+            status_code=401,
+            detail="Login required"
+        )
 
-    # Extract text strings and binary image files safely out of the form data state cache
-    form_data = await request.form()
-    title = form_data.get("title")
-    category_id_raw = form_data.get("category_id")
-    content = form_data.get("content") # 👈 TinyMCE content parses smoothly as structured raw HTML strings here
-    tags = form_data.get("tags")
-    # Crucial Fix: Safely pull the uploaded file out of form data map
-    image = form_data.get("image")  
-    if not title or not content or not category_id_raw:
-        raise HTTPException(status_code=400, detail="Missing required field property keys")
-    try:
-        category_id = int(category_id_raw)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid category ID format")
+    # ====================================================
+    # BASIC VALIDATION
+    # ====================================================
 
-    # Proceed with saving your data variables straight into your SQL model parameters blocks...
+    if not title or not title.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Title is required"
+        )
+
+    if not content or not content.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Content is required"
+        )
+
+    # ====================================================
+    # SLUG
+    # ====================================================
 
     slug = slugify(title)
 
-    existing_slug = db.query(News).filter(News.slug == slug).first()
+    existing_slug = (
+        db.query(News)
+        .filter(News.slug == slug)
+        .first()
+    )
 
     if existing_slug:
-       slug = f"{slug}-{uuid4().hex[:6]}"
-    clean_content = sanitize_html(content or "")
+        slug = f"{slug}-{uuid4().hex[:6]}"
+
+    # ====================================================
+    # DEFAULT IMAGE VALUES
+    # ====================================================
 
     image_path = None
     image_hash = None
     image_size = 0
 
-    # ---------------- IMAGE UPLOAD ----------------
-    if image and isinstance(image, UploadFile) and image.filename:
-        safe_name = secure_filename(image.filename)
-        ext = os.path.splitext(safe_name)[1].lower()
+    # ====================================================
+    # FEATURE IMAGE UPLOAD
+    # ====================================================
+
+    if image and image.filename:
+
+        print(
+            "========================================"
+        )
+        print(
+            "NEWS CREATE - IMAGE RECEIVED"
+        )
+        print(
+            "Filename:",
+            image.filename
+        )
+        print(
+            "Content type:",
+            image.content_type
+        )
+        print(
+            "========================================"
+        )
+
+        # ------------------------------------------------
+        # Secure filename
+        # ------------------------------------------------
+
+        safe_name = secure_filename(
+            image.filename
+        )
+
+        if not safe_name:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid image filename"
+            )
+
+        # ------------------------------------------------
+        # Get extension
+        # ------------------------------------------------
+
+        ext = os.path.splitext(
+            safe_name
+        )[1].lower()
 
         if ext not in ALLOWED_IMAGES:
-            raise HTTPException(status_code=400, detail="Invalid image format")
 
-        image_hash = generate_file_hash(image.file)
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Invalid image format: {ext}. "
+                    f"Allowed formats: "
+                    f"{', '.join(ALLOWED_IMAGES)}"
+                )
+            )
 
-        existing_image = db.query(News)\
-            .filter(News.image_hash == image_hash)\
-            .first()
-
-        if existing_image:
-            raise HTTPException(status_code=400, detail="Image already exists")
+        # ------------------------------------------------
+        # Move pointer to beginning
+        # ------------------------------------------------
 
         image.file.seek(0)
 
-     
-        filename = f"{uuid4()}{ext}"
-        file_path = os.path.join(UPLOAD_DIR, filename)
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(image.file, buffer)
+        # ------------------------------------------------
+        # Generate image hash
+        # ------------------------------------------------
 
-        image_path = f"/static/uploads/news/{filename}"
-        image_size = os.path.getsize(file_path)
+        image_hash = generate_file_hash(
+            image.file
+        )
 
-    # ---------------- SESSION USER ----------------
-    user_id = request.session.get("user_id")
+        # ------------------------------------------------
+        # Duplicate image check
+        # ------------------------------------------------
 
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Login required")
+        existing_image = (
+            db.query(News)
+            .filter(
+                News.image_hash == image_hash
+            )
+            .first()
+        )
 
-    clean_content = sanitize_html(content)
+        if existing_image:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Image already exists"
+            )
+
+        # ------------------------------------------------
+        # IMPORTANT:
+        # generate_file_hash() reads the file.
+        # Reset the pointer before saving.
+        # ------------------------------------------------
+
+        image.file.seek(0)
+
+        # ------------------------------------------------
+        # Generate unique filename
+        # ------------------------------------------------
+
+        filename = (
+            f"{uuid4().hex}{ext}"
+        )
+
+        # ------------------------------------------------
+        # Physical file path
+        # ------------------------------------------------
+
+        file_path = os.path.join(
+            UPLOAD_DIR,
+            filename
+        )
+
+        # ------------------------------------------------
+        # Save image
+        # ------------------------------------------------
+
+        try:
+
+            with open(
+                file_path,
+                "wb"
+            ) as buffer:
+
+                shutil.copyfileobj(
+                    image.file,
+                    buffer
+                )
+
+        except Exception as exc:
+
+            print(
+                "NEWS IMAGE SAVE ERROR:",
+                repr(exc)
+            )
+
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to save image"
+            )
+
+        # ------------------------------------------------
+        # Verify physical file
+        # ------------------------------------------------
+
+        if not os.path.isfile(
+            file_path
+        ):
+
+            raise HTTPException(
+                status_code=500,
+                detail="Image file was not created"
+            )
+
+        # ------------------------------------------------
+        # Get file size
+        # ------------------------------------------------
+
+        image_size = os.path.getsize(
+            file_path
+        )
+
+        if image_size <= 0:
+
+            try:
+
+                os.remove(
+                    file_path
+                )
+
+            except OSError:
+
+                pass
+
+            raise HTTPException(
+                status_code=500,
+                detail="Uploaded image is empty"
+            )
+
+        # ------------------------------------------------
+        # Database URL
+        # ------------------------------------------------
+
+        image_path = (
+            f"/static/uploads/news/{filename}"
+        )
+
+        # ------------------------------------------------
+        # Verification logs
+        # ------------------------------------------------
+
+        print(
+            "========================================"
+        )
+
+        print(
+            "NEWS CREATE - IMAGE SAVED"
+        )
+
+        print(
+            "Database image:",
+            image_path
+        )
+
+        print(
+            "Physical path:",
+            file_path
+        )
+
+        print(
+            "Image hash:",
+            image_hash
+        )
+
+        print(
+            "Image size:",
+            image_size
+        )
+
+        print(
+            "File exists:",
+            os.path.isfile(file_path)
+        )
+
+        print(
+            "========================================"
+        )
+
+    else:
+
+        print(
+            "========================================"
+        )
+
+        print(
+            "NEWS CREATE - NO FEATURE IMAGE"
+        )
+
+        print(
+            "========================================"
+        )
+
+    # ====================================================
+    # SANITIZE ARTICLE CONTENT
+    # ====================================================
+
+    clean_content = sanitize_html(
+        content or ""
+    )
+
+    # ====================================================
+    # CREATE NEWS DATABASE RECORD
+    # ====================================================
 
     news = News(
-        title=title,
+        title=title.strip(),
         slug=slug,
         content=clean_content,
         category_id=category_id,
@@ -234,20 +484,108 @@ async def create_news_article(
         author_id=user_id
     )
 
+    # ====================================================
     # SAVE NEWS
-    db.add(news)
+    # ====================================================
 
-    db.commit()
+    try:
 
-    db.refresh(news)
+        db.add(news)
 
-     # SEND EMAIL TO SUBSCRIBERS
-    # =========================
-    # SEND EMAILS (ASYNC)
-    # =========================
-    subscribers = db.query(Subscriber).all()
+        db.commit()
+
+        db.refresh(news)
+
+    except Exception as exc:
+
+        db.rollback()
+
+        # If database save failed after image upload,
+        # remove the orphaned physical image.
+
+        if image_path:
+
+            orphan_path = os.path.join(
+                "app",
+                image_path.lstrip("/")
+            )
+
+            if os.path.isfile(
+                orphan_path
+            ):
+
+                try:
+
+                    os.remove(
+                        orphan_path
+                    )
+
+                except OSError:
+
+                    pass
+
+        print(
+            "NEWS DATABASE ERROR:",
+            repr(exc)
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create news article"
+        )
+
+    # ====================================================
+    # FINAL VERIFICATION
+    # ====================================================
+
+    print(
+        "========================================"
+    )
+
+    print(
+        "NEWS CREATED SUCCESSFULLY"
+    )
+
+    print(
+        "News ID:",
+        news.id
+    )
+
+    print(
+        "Title:",
+        news.title
+    )
+
+    print(
+        "Image:",
+        repr(news.image)
+    )
+
+    print(
+        "Image hash:",
+        repr(news.image_hash)
+    )
+
+    print(
+        "Image size:",
+        news.image_size
+    )
+
+    print(
+        "========================================"
+    )
+
+    # ====================================================
+    # SEND EMAILS TO SUBSCRIBERS
+    # ====================================================
+
+    subscribers = (
+        db.query(Subscriber)
+        .all()
+    )
 
     for sub in subscribers:
+
         background_tasks.add_task(
             send_email,
             sub.email,
@@ -255,11 +593,14 @@ async def create_news_article(
             news.content or ""
         )
 
+    # ====================================================
+    # REDIRECT
+    # ====================================================
+
     return RedirectResponse(
         "/dashboard/news",
-        status_code=302
+        status_code=303
     )
-
 # ====================================================
 # EDIT PAGE
 # ====================================================
@@ -402,25 +743,75 @@ def frontend_news(request: Request, db: Session = Depends(get_db)):
 # ====================================================
 # NEWS DETAIL
 # ====================================================
+# ====================================================
 @router.get("/news/{slug}")
 def news_detail(slug: str, request: Request, db: Session = Depends(get_db)):
-
-    news = db.query(News)\
-        .options(joinedload(News.comments))\
-        .filter(News.slug == slug)\
-        .first()
-
+    news = db.query(News).options(joinedload(News.comments)).filter(News.slug == slug).first()
+    
     if not news:
         raise HTTPException(status_code=404, detail="News not found")
 
-    news.views = (news.views or 0) + 1
-    db.commit()
+    comments = news.comments if news.comments else []
+    related_news = db.query(News).filter(News.id != news.id).order_by(News.created_at.desc()).limit(4).all()
+
+    # 🔒 PHASE 1: HARDENED DEDUPLICATED IP RESOLUTION & HASHING
+    ip_raw = request.headers.get("CF-Connecting-IP") or request.headers.get("X-Real-IP") or request.client.host
+    ip_str = str(ip_raw).split(",")[0].strip()
+    hashed_ip = hashlib.sha256(ip_str.encode("utf-8")).hexdigest()
+
+    # 🔒 PHASE 2: DEFENSIVE LEDGER QUERY BOUNDARIES
+    session_user_id = request.session.get("user_id")
+    view_query = db.query(StreamLog).filter(
+        StreamLog.content_type == "news_view",
+        StreamLog.content_id == news.id
+    )
+    
+    if session_user_id:
+        already_viewed = view_query.filter(
+            (StreamLog.ip_address == hashed_ip) | (StreamLog.user_id == session_user_id)
+        ).first()
+    else:
+        already_viewed = view_query.filter(StreamLog.ip_address == hashed_ip).first()
+
+    # 🔒 PHASE 3: IMMUTABLE VIEW INCREMENTATION LOCK
+    if not already_viewed:
+        news.views = (news.views or 0) + 1
+        log = StreamLog(
+            user_id=session_user_id,
+            content_type="news_view",
+            content_id=news.id,
+            ip_address=hashed_ip
+        )
+        db.add(log)
+        try:
+            db.commit()
+            print(f"[Analytics] Logged unique news view for ID: #{news.id}")
+        except Exception:
+            db.rollback()
+    else:
+        db.refresh(news)
+
+    # 🔒 PHASE 4: SECURE DYNAMIC LINK PREVIEW ROUTING METRICS
+    if news.image:
+        meta_image = f"https://therealbam.com{news.image}"
+    else:
+        meta_image = "https://therealbam.com"
+
     return request.app.state.render_with_csrf(
         templates_instance=templates,
         request=request,
         template_name="frontend/news_detail.html",
         context={
-            "news": news
+            "news": news,
+            "comments": comments,
+            "related_news": related_news,
+            "meta_title": news.title,
+            "meta_description": (
+                news.content[:160]
+                if news.content
+                else "Read the latest tech updates and news on BAM-Tech."
+            ),
+            "meta_image": meta_image
         }
     )
 

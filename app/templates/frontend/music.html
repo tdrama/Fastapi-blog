@@ -1,150 +1,184 @@
 {% extends "frontend/base.html" %}
 
+{% block title %}Music Feed | BamTech{% endblock %}
+
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-
     <div class="mb-10">
-        <h1 class="text-4xl font-bold">Music</h1>
-        <p class="text-gray-500 mt-2">Listen to latest uploaded music</p>
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Music</h1>
+        <p class="text-gray-500 mt-2">Listen to and download the latest track releases on BamTech.</p>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {% for music in musics %}
-        <!-- Added flex utilities to keep card columns perfectly aligned -->
-        <div class="bg-white rounded-2xl shadow overflow-hidden hover:shadow-2xl transition flex flex-col justify-between">
-
-            <!-- UPPER CARD CONTENT -->
+        <!-- Structural flex boundaries to keep grid elements perfectly synchronized -->
+        <div class="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden hover:shadow-xl transition flex flex-col justify-between h-full">
+            
+            <!-- UPPER MEDIA AND CONTENT BLOCK -->
             <div>
-                <!-- COVER IMAGE -->
                 {% if music.cover_image %}
-                <img class="w-full h-64 object-cover" src="{{ url_for('static', path='uploads/' ~ music.cover_image) }}" alt="{{ music.title | e }}">
+                <img class="w-full h-64 object-cover bg-gray-50" src="{{ url_for('static', path='uploads/' ~ music.cover_image) }}" alt="{{ music.title | e }}">
+                {% else %}
+                <img class="w-full h-64 object-cover bg-gray-50" src="/static/img/music_default.jpg" alt="Default Cover">
                 {% endif %}
 
                 <div class="p-5 pb-0">
-                    <!-- META -->
-                    <div class="flex justify-between text-sm text-gray-500 mb-3">
-                        <span class="truncate pr-2 font-medium">🎵 {{ music.artist | e }}</span>
-                        <span class="shrink-0">{{ music.created_at.strftime('%d %b %Y') if music.created_at else '' }}</span>
+                    <div class="flex justify-between text-xs text-gray-400 mb-2 font-medium">
+                        <span class="truncate pr-2 font-semibold text-blue-600">🎵 {{ music.artist | e }}</span>
+                     <p class="text-sm text-gray-500">
+    👤 {{ music.user.username if music.user else 'Admin' }}
+</p>
+                        <span class="shrink-0">📅 {{ music.created_at.strftime('%d %b %Y') if music.created_at else '' }}</span>
                     </div>
-
-                    <!-- TITLE -->
-                    <h2 class="text-2xl font-bold mb-3 break-words">{{ music.title | e }}</h2>
-
-                    <!-- DESCRIPTION -->
-                    <p class="text-gray-600 text-sm mb-5 break-words">{{ music.description | e }}</p>
+                    <!-- Routing details update targeting slugs dynamically -->
+                    <a href="/music/{{ music.slug if music.slug else music.id }}" class="hover:text-blue-600 transition">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2 break-words tracking-tight">{{ music.title | e }}</h2>
+                    </a>
+                    <p class="text-gray-600 text-sm mb-4 break-words line-clamp-2">{{ music.description | e }}</p>
                 </div>
             </div>
 
-            <!-- LOWER MEDIA & INTERACTIONS LAYER -->
-            <div class="p-5 pt-0">
-                <!-- AUDIO PLAYER -->
-                {% if music.music_file %}
-                <audio controls class="w-full mb-4" preload="metadata">
-                    <source src="{{ url_for('static', path='uploads/' ~ music.music_file) }}">
-                    Your browser does not support audio playback.
-                </audio>
-                {% else %}
-                <p class="text-red-500 mb-4 text-sm font-medium">Audio file unavailable</p>
-                {% endif %}
-
-                <!-- DOWNLOAD ACTION (FIXED STRIPPED SYNTAX CLOSURES) -->
-                {% if music.file_exists %}
-                <!-- ✅ FIXED: Patched the missing tag quotes and structural brackets -->
-                <a href="/music/download/{{ music.id }}" class="w-full inline-block text-center bg-black hover:bg-gray-800 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
-                    Download Track
-                </a>
-                {% endif %}
-
-                <!-- STATS -->
-                <div class="mt-4 flex gap-4 text-xs text-gray-400 font-medium">
-                    <p>👁 {{ music.views or 0 }} plays</p>
-                    <p>⬇️ {{ music.downloads or 0 }} downloads</p>
+            <!-- LOWER CONTROLS & INTERACTIONS PLATFORM LAYER -->
+            <div class="p-5 pt-0 mt-auto">
+                <div class="bg-gray-50 p-3 rounded-xl border mb-4">
+                    {% if music.music_file %}
+                    <!-- Hides browser 3-dots option panels using explicit native tracking attributes -->
+                    <audio controls controlsList="nodownload" class="w-full h-8 opacity-90 focus:opacity-100 transition" preload="metadata">
+                        <source src="{{ url_for('static', path='uploads/' ~ music.music_file) }}" type="audio/mpeg">
+                        Your browser does not support audio playback.
+                    </audio>
+                    {% else %}
+                    <p class="text-red-500 text-xs font-semibold text-center">Audio stream binary unavailable</p>
+                    {% endif %}
                 </div>
 
-                <!-- COMMENTS ENGINE PANEL -->
-                <div class="mt-6 border-t pt-4">
-                    <h3 class="text-sm font-bold text-gray-700 mb-3">
+                <!-- UNIFIED COUNTING DOWNLOAD ACTIONS GATEWAY -->
+                <a href="/music/download/{{music.slug}}" 
+                   class="w-full inline-block text-center bg-black hover:bg-gray-800 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition tracking-wide shadow-sm dynamic-download-btn">
+                    Download Track
+                </a>
+
+                <!-- STATS COUNTER DISPLAY INDICATORS -->
+                <div class="mt-4 flex gap-4 text-xs font-medium text-gray-400 border-b pb-3">
+                    <p>👁 {{ music.views or 0 }} plays</p>
+                    <p class="download-counter-text">⬇️ {{ music.downloads or 0 }} downloads</p>
+                </div>
+
+                <!-- COMMENTS CORE HOOK SUBSECTION PANEL -->
+                <div class="mt-4 pt-1">
+                    <h3 class="text-xs font-bold text-gray-700 mb-2">
                         💬 Comments ({{ music.comments|length if music.comments else 0 }})
                     </h3>
 
-                    <!-- ✅ OPTIMIZED: Changed to class="dynamic-music-comment-form" for clean array event looping -->
-                    <form action="/music/{{ music.id }}/comment" method="POST" class="dynamic-music-comment-form space-y-3 mb-4">
+                    <!-- Action endpoint maps cleanly through slug-based paths -->
+                    <form action="/music/{{ music.id }}/comment" method="POST" class="dynamic-music-comment-form space-y-2 mb-3">
                         {% if csrf_token %}
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         {% endif %}
-
-                        <input type="text" name="name" placeholder="Your name" required
-                               class="w-full border rounded-xl px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500">
-
-                        <textarea name="content" rows="2" placeholder="Write a comment..." required
-                                  class="w-full border rounded-xl px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
-
-                        <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white text-xs font-semibold py-2 px-4 rounded-xl transition shadow-sm">
-                            Post Comment
-                        </button>
+                        <div class="flex gap-2">
+                            <input type="text" name="name" placeholder="Your name" required
+                                   class="w-1/3 border rounded-xl px-3 py-1.5 text-xs bg-white outline-none focus:ring-2 focus:ring-blue-500 border-gray-200">
+                            <input type="text" name="content" placeholder="Write a comment..." required
+                                   class="w-2/3 border rounded-xl px-3 py-1.5 text-xs bg-white outline-none focus:ring-2 focus:ring-blue-500 border-gray-200">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 rounded-xl transition shadow-sm shrink-0">
+                                Post
+                            </button>
+                        </div>
                     </form>
 
-                    <!-- COMMENT FLOW TIMELINE -->
-                    <div class="space-y-3 max-h-48 overflow-y-auto pr-1">
+                    <!-- INNER TIMELINE FEED LIST SCROLL CONTAINER -->
+                   <div class="space-y-2 max-h-28 overflow-y-auto pr-1">
                         {% for comment in music.comments %}
-                        <div class="bg-gray-50 border p-3 rounded-xl text-sm break-words shadow-sm">
-                            <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                <strong class="text-gray-700">{{ comment.name | e }}</strong>
+                        <div class="bg-gray-50 border border-gray-100 p-2.5 rounded-xl text-xs break-words shadow-sm">
+                            <div class="flex justify-between text-[10px] text-gray-400 mb-0.5">
+                                <strong class="text-gray-700 font-semibold">{{ comment.name | e }}</strong>
                                 <span>{{ comment.created_at.strftime('%d %b %H:%M') if comment.created_at else '' }}</span>
                             </div>
-                            <p class="text-gray-600 text-xs">{{ comment.content | e }}</p>
+                            <p class="text-gray-600 text-[11px] leading-relaxed">{{ comment.content | e }}</p>
                         </div>
                         {% else %}
-                        <p class="text-xs text-gray-400 text-center py-2 italic">No comments yet.</p>
+                        <p class="text-[11px] text-gray-400 text-center py-1 italic">No comments yet.</p>
                         {% endfor %}
                     </div>
                 </div>
             </div>
 
         </div>
+        {% else %}
+        <div class="col-span-full bg-white shadow rounded-2xl p-8 text-center text-gray-400 italic text-sm border">
+            No music tracks available in our database indices at this time.
+        </div> 
         {% endfor %}
     </div>
-
 </div>
 
-<!-- ✅ REFRESHLESS INLINE MULTI-CARD POST ROUTING PROCESSOR -->
+<!-- COMPREHENSIVE PRODUCTION ASYNC ACTIONS EXECUTOR MODULE -->
 <script>
+// 1. REFRESHLESS INTERACTIVE COMMENTS ENGINE
 document.querySelectorAll(".dynamic-music-comment-form").forEach(form => {
     form.addEventListener("submit", async function(e) {
-        e.preventDefault(); // Stop standard unheadered navigation loops
-
-        const targetForm = e.target;
-        const tokenInput = targetForm.querySelector('input[name="csrf_token"]');
-        
-        if (!tokenInput || !tokenInput.value) {
-            alert("Security Error: CSRF parameter data string missing.");
-            return;
-        }
-
-        const token = tokenInput.value;
-        const formData = new FormData(targetForm);
+        e.preventDefault();
+        const submitButton = this.querySelector('button[type="submit"]');
+        const tokenInput = this.querySelector('input[name="csrf_token"]');
+        const csrfToken = tokenInput ? tokenInput.value : "";
+        const encodedParamsPayload = new URLSearchParams(new FormData(this));
 
         try {
-            const response = await fetch(targetForm.action, {
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerText = "...";
+            }
+
+            const apiNetworkResponse = await fetch(this.action, {
                 method: "POST",
                 headers: {
-                    "X-CSRF-Token": csrfToken // ✅ SATISFIES THE MAIN MIDDLEWARE HEADERS ENGINE
+                    "X-CSRF-Token": csrfToken,
+                    "Content-Type": "application/x-www-form-urlencoded"
                 },
-                body: formData,
+                body: encodedParamsPayload,
                 credentials: "include"
             });
 
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else if (response.ok) {
-                window.location.reload(); // Refresh cleanly on submission success
+            if (apiNetworkResponse.ok) {
+                window.location.reload();
             } else {
-                const data = await response.json().catch(() => ({}));
-                alert(data.detail || "Error: Failed to process public track comment.");
+                //  FIXED: Safely extracts text strings even if FastAPI passes a complex validation error object
+const dataErrorBody = await apiNetworkResponse.json().catch(() => ({}));
+let errorMessage = "Validation Error: Failed to append comment.";
+
+if (dataErrorBody.detail) {
+    if (typeof dataErrorBody.detail === 'string') {
+        errorMessage = dataErrorBody.detail;
+    } else if (Array.isArray(dataErrorBody.detail) && dataErrorBody.detail[0]) {
+        errorMessage = `${dataErrorBody.detail[0].loc.join('.')} - ${dataErrorBody.detail[0].msg}`; }
+             }  alert(errorMessage);
+
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerText = "Post";
+                }
             }
-        } catch (err) {
-            console.error(err);
-            alert("A system network transmission error occurred during processing.");
+        } catch (networkError) {
+            console.error(networkError);
+            alert("A transmission network disruption aborted your request loop.");
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerText = "Post";
+            }
+        }
+    });
+});
+
+// 2. RUNTIME INTERACTIVE VISUAL DOWNLOAD COUNTER ENGINE INCREMENTER
+document.querySelectorAll(".dynamic-download-btn").forEach(btn => {
+    btn.addEventListener("click", function() {
+        const structuralDisplayCard = this.closest(".p-5");
+        if (structuralDisplayCard) {
+            const counterTextNode = structuralDisplayCard.querySelector(".download-counter-text");
+            if (counterTextNode) {
+                const parsedCounterValue = parseInt(counterTextNode.innerText.replace(/[^0-9]/g, "")) || 0;
+                counterTextNode.innerHTML = `⬇️ ${parsedCounterValue + 1} downloads`;
+            }
         }
     });
 });

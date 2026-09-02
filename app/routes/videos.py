@@ -156,54 +156,69 @@ async def create_video(
     title = form_data.get("title")
     description = form_data.get("description")
     category_id_raw = form_data.get("category_id")
-    
-    # Aligned target key extraction fallback check to accept 'video_file' from HTML input forms
+    embed_url = form_data.get("embed_url")
     video_upload = form_data.get("video_file") or form_data.get("video")
 
-    if not title or not video_upload or not category_id_raw:
-        raise HTTPException(status_code=400, detail="Missing required input variables.")
+    if not title or not category_id_raw:
+        raise HTTPException(status_code=400, detail="Title and category are required.")
+
+    if not video_upload and not embed_url:
+        raise HTTPException(status_code=400, detail="Provide either a video file or an external embed URL.")
 
     try:
         category_id = int(category_id_raw)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid category identity constraint value.")
 
-    # Optional thumbnail file field parsing logic
     thumbnail_upload = form_data.get("thumbnail")
-    thumbnail_url_path = "videos/thumbnail.mp4"  # Default video fallback mapping parameter string
-
-    if not hasattr(video_upload, "filename") or not video_upload.filename:
-        raise HTTPException(status_code=400, detail="The upload container lacks a valid file payload parameter.")
-
-    safe_orig = secure_filename(video_upload.filename)
-    ext = os.path.splitext(safe_orig)[1].lower()
-
-    if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail="Unsupported video format type extension.")
-
-    # Run direct asset checksum validations
-    file_hash = generate_file_hash(video_upload.file)
-    existing = db.query(Video).filter(Video.file_hash == file_hash).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="This exact video file is already registered.")
-
-    video_upload.file.seek(0)
-
-    secure_video_token = f"vid_{uuid.uuid4().hex}{ext}"
-    physical_video_save_path = os.path.join(UPLOAD_DIR, secure_video_token)
+    thumbnail_url_path = None
+    video_url_path = None
+    calculated_file_size = 0
+    file_hash = None
     new_files_written = []
 
-    #  FIXED FILE STREAM: Swapped old blocking chunks with full async buffer loops to protect Termux workers
-    try:
-        async with aiofiles.open(physical_video_save_path, "wb") as out_file:
-            while chunk := await video_upload.read(1024 * 1024 * 4): # 4MB dynamic stream blocks
-                await out_file.write(chunk)
-        new_files_written.append(physical_video_save_path)
-    except Exception as e:
-        if os.path.exists(physical_video_save_path): os.remove(physical_video_save_path)
-        raise HTTPException(status_code=500, detail="Disk streaming error during video generation loops.")
+    # ====================================================
+    # CASE 1: PROCESSING PHYSICAL VIDEO FILE STREAM UPLOADS
+    # ====================================================
+    if video_upload and hasattr(video_upload, "filename") and video_upload.filename:
+        safe_orig = secure_filename(video_upload.filename)
+        ext = os.path.splitext(safe_orig)[1].lower()
 
-    # Process optional thumbnail preview artwork image uploads asynchronously if attached
+        if ext not in ALLOWED_EXTENSIONS:
+            raise HTTPException(status_code=400, detail="Unsupported video format type extension.")
+
+        # Run asset checksum validations securely
+        file_hash = generate_file_hash(video_upload.file)
+        existing = db.query(Video).filter(Video.file_hash == file_hash).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="This exact video file is already registered.")
+
+        video_upload.file.seek(0)
+        secure_video_token = f"vid_{uuid.uuid4().hex}{ext}"
+        physical_video_save_path = os.path.join(UPLOAD_DIR, secure_video_token)
+
+        try:
+            async with aiofiles.open(physical_video_save_path, "wb") as out_file:
+                while chunk := await video_upload.read(1024 * 1024 * 4):  # 4MB blocks
+                    await out_file.write(chunk)
+            new_files_written.append(physical_video_save_path)
+            video_url_path = f"videos/{secure_video_token}"
+            calculated_file_size = os.path.getsize(physical_video_save_path)
+        except Exception:
+            if os.path.exists(physical_video_save_path): 
+                os.remove(physical_video_save_path)
+            raise HTTPException(status_code=500, detail="Disk streaming error during video generation loops.")
+            
+    # ====================================================
+    # CASE 2: STREAMING PRE-RESOLVED THIRD PARTY EMBED LINK
+    # ====================================================
+    elif embed_url and embed_url.strip():
+        # Funnels standard links directly if no file stream context exists
+        video_url_path = None 
+
+    # ====================================================
+    # PROCESSING OPTIONAL THUMBNAIL IMAGES
+    # ====================================================
     if thumbnail_upload and hasattr(thumbnail_upload, "filename") and thumbnail_upload.filename:
         thumb_orig = secure_filename(thumbnail_upload.filename)
         thumb_ext = os.path.splitext(thumb_orig)[1].lower()
@@ -219,22 +234,23 @@ async def create_video(
                 new_files_written.append(physical_thumb_save_path)
                 thumbnail_url_path = f"videos/{secure_thumb_token}"
             except Exception:
+                # Clean up everything saved so far if thumbnail fails
                 for p in new_files_written:
                     if os.path.exists(p): os.remove(p)
                 raise HTTPException(status_code=500, detail="Disk streaming error during thumbnail processing.")
 
-    # Compile explicit absolute prefix paths right inside the database record columns
-    video_url_path = f"videos/{secure_video_token}"
-    calculated_file_size = os.path.getsize(physical_video_save_path)
-
+    # ====================================================
+    # RECORD PERSISTENCE TO DATABASE HOOKS
+    # ====================================================
     try:
         new_video = Video(
             title=title.strip(),
             description=description.strip() if description else None,
             video_file=video_url_path,
-            thumbnail=thumbnail_url_path,  # Now cleanly records complete absolute or placeholder strings
+            thumbnail=thumbnail_url_path,
             file_size=calculated_file_size,
-            file_size_display=format_file_size(calculated_file_size),
+            embed_url=embed_url.strip() if embed_url else None,
+            file_size_display=format_file_size(calculated_file_size) if calculated_file_size > 0 else "0 Bytes",
             file_hash=file_hash,
             user_id=int(user_id),
             category_id=category_id,
@@ -245,11 +261,20 @@ async def create_video(
         db.refresh(new_video)
     except Exception as db_err:
         db.rollback()
+        # Clean up files from disk if database write fails
         for p in new_files_written:
             if os.path.exists(p): os.remove(p)
-        raise HTTPException(status_code=500, detail="Database write sequence execution crash loop.")
+            
+        print("========== VIDEO DATABASE ERROR ==========")
+        print(repr(db_err))
+        import traceback
+        traceback.print_exc()
+        print("==========================================")
+        raise HTTPException(status_code=500, detail=f"Video database error: {str(db_err)}")
 
-    # Asynchronous broadcast loop notifications pipeline
+    # ====================================================
+    # BACKGROUND EMAIL NOTIFICATIONS DISPATCH SYSTEM
+    # ====================================================
     try:
         subscribers = db.query(Subscriber).all()
         for sub in subscribers:
@@ -265,7 +290,7 @@ async def create_video(
     if "application/x-www-form-urlencoded" in request.headers.get("content-type", "").lower():
         return RedirectResponse("/dashboard/videos", status_code=303)
 
-    return JSONResponse(status_code=201, content={"success": True, "detail": "Video record saved securely."})
+    return RedirectResponse("/dashboard/videos", status_code=303)
 
 
 # ====================================================
@@ -312,16 +337,19 @@ async def update_video_action(
     request: Request,
     title: str = Form(...),
     description: str = Form(None),
+    embed_url: str = Form(None),
     category_id: int = Form(...),
+    video_file: UploadFile = File(None),
+    thumbnail: UploadFile = File(None),
     db: Session = Depends(get_db)
 ):
-    # Enforce credentials matching your dashboard architecture requirements
     user_id = request.session.get("user_id")
     if not user_id:
         return RedirectResponse(
-        url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
-        status_code=303)
-    # Query the database object first before checking constraints
+            url=f"/{settings.LOGIN_GATEWAY_URL}?access_token={settings.ADMIN_GATEWAY_TOKEN}",
+            status_code=303
+        )
+
     video = db.query(Video).filter(Video.id == video_id).first()
     if not video:
         raise HTTPException(
@@ -329,19 +357,103 @@ async def update_video_action(
             detail="The requested video asset record was not found."
         )
 
-    # Update text fields
+    # 🛡️ ARCHITECTURE REINFORCEMENT: Clean text attributes
     video.title = title.strip()
     video.description = description.strip() if description else None
     video.category_id = category_id
 
-    # Commit changes securely to the database
+    # Track files written to handle rollback cleanups
+    new_files_written = []
+    old_video_path_to_delete = None
+    old_thumb_path_to_delete = None
+
+    # Handle URL assignment vs file logic matrix
+    clean_embed = embed_url.strip() if embed_url and embed_url.strip() else None
+    video.embed_url = clean_embed
+
+    # If switching to an external embed link, safely clear the old local file path metadata reference
+    if clean_embed and not (video_file and video_file.filename):
+        if video.video_file:
+            old_video_path_to_delete = os.path.join("app/static", video.video_file) # Adjusted to match upload tree paths
+            video.video_file = None
+            video.file_size = 0
+            video.file_size_display = "0 Bytes"
+            video.file_hash = None
+
+    # ====================================================
+    # NEW PHYSICAL VIDEO FILE OVERWRITE FLOW
+    # ====================================================
+    if video_file and hasattr(video_file, "filename") and video_file.filename:
+        ext = os.path.splitext(secure_filename(video_file.filename))[1].lower()
+        if ext not in ALLOWED_EXTENSIONS:
+            raise HTTPException(status_code=400, detail="Unsupported video format type extension.")
+
+        # Save old record context paths to trigger deletions post-commit
+        if video.video_file:
+            old_video_path_to_delete = os.path.join("app/static", video.video_file)
+
+        secure_video_token = f"vid_{uuid.uuid4().hex}{ext}"
+        physical_video_save_path = os.path.join(UPLOAD_DIR, secure_video_token)
+
+        try:
+            async with aiofiles.open(physical_video_save_path, "wb") as out_file:
+                while chunk := await video_file.read(1024 * 1024 * 4):
+                    await out_file.write(chunk)
+            new_files_written.append(physical_video_save_path)
+            
+            video.video_file = f"videos/{secure_video_token}"
+            video.file_size = os.path.getsize(physical_video_save_path)
+            video.file_size_display = format_file_size(video.file_size)
+            video.embed_url = None  # Local files clear out explicit embed targets
+        except Exception:
+            if os.path.exists(physical_video_save_path): os.remove(physical_video_save_path)
+            raise HTTPException(status_code=500, detail="Disk streaming error during video update loops.")
+
+    # ====================================================
+    # NEW THUMBNAIL COVER ARTWORK OVERWRITE FLOW
+    # ====================================================
+    if thumbnail and hasattr(thumbnail, "filename") and thumbnail.filename:
+        thumb_ext = os.path.splitext(secure_filename(thumbnail.filename))[1].lower()
+        if thumb_ext in {".jpg", ".jpeg", ".png", ".webp"}:
+            if video.thumbnail:
+                old_thumb_path_to_delete = os.path.join("app/static", video.thumbnail)
+
+            secure_thumb_token = f"thumb_{uuid.uuid4().hex}{thumb_ext}"
+            physical_thumb_save_path = os.path.join(UPLOAD_DIR, secure_thumb_token)
+
+            try:
+                thumbnail.file.seek(0)
+                async with aiofiles.open(physical_thumb_save_path, "wb") as out_file:
+                    while chunk := await thumbnail.read(1024 * 1024):
+                        await out_file.write(chunk)
+                new_files_written.append(physical_thumb_save_path)
+                video.thumbnail = f"videos/{secure_thumb_token}"
+            except Exception:
+                for p in new_files_written:
+                    if os.path.exists(p): os.remove(p)
+                raise HTTPException(status_code=500, detail="Disk streaming error during thumbnail updates.")
+
+    # ====================================================
+    # PERSIST CHANGES SECURELY TO DB LOGIC
+    # ====================================================
     try:
         db.commit()
-    except Exception:
+        
+        # 🧼 POST-COMMIT CLEANUP: Delete old overwritten files from disk safely
+        if old_video_path_to_delete and os.path.exists(old_video_path_to_delete):
+            try: os.remove(old_video_path_to_delete)
+            except Exception: pass
+        if old_thumb_path_to_delete and os.path.exists(old_thumb_path_to_delete):
+            try: os.remove(old_thumb_path_to_delete)
+            except Exception: pass
+
+    except Exception as db_err:
         db.rollback()
+        # Delete newly uploaded files on database transaction failure
+        for p in new_files_written:
+            if os.path.exists(p): os.remove(p)
         raise HTTPException(status_code=500, detail="Database write sequence failed during update.")
 
-    # Return redirect to the main videos list dashboard view
     return RedirectResponse(url="/dashboard/videos", status_code=303)
 
 # ====================================================

@@ -1,87 +1,143 @@
 {% extends "frontend/base.html" %}
 
+{% block title %}Contact Us | BamTech{% endblock %}
+
 {% block content %}
+<!--================= CONTACT SECTION CONTAINER ================= -->
+<section class="max-w-7xl mx-auto px-4 py-12 flex-1">
 
-<!-- CONTACT HEADER -->
-<section class="max-w-7xl mx-auto px-4 py-12">
-
-    <div class="text-center mb-10">
-
-        <h1 class="text-4xl md:text-5xl font-bold">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
             Contact Us
         </h1>
-
-        <p class="text-gray-600 mt-4">
-            We would love to hear from you. Send us a message anytime.
+        <p class="text-gray-500 mt-3 max-w-xl mx-auto text-base">
+            We would love to hear from you. Send us a message anytime and our support team will reply shortly.
         </p>
-
     </div>
 
-    <div class="grid lg:grid-cols-2 gap-10">
+    <!-- RESPONSIVE 2-COLUMN BALANCED MATRIX GRID -->
+    <div class="grid lg:grid-cols-2 gap-10 items-start">
 
-
-        <!-- CONTACT INFO -->
+        <!-- COLUMN 1: DIRECT CONTACT INFORMATION CARDS -->
         <div class="space-y-6">
-
-            <div class="bg-gray-50 p-6 rounded-2xl shadow">
-
-                <h3 class="text-xl font-bold mb-3">
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition hover:shadow-md">
+                <h3 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
                     📍 Address
                 </h3>
-
-                <p class="text-gray-600">
+                <p class="text-gray-600 text-sm leading-relaxed">
                     Lagos, Nigeria<br>
-                    Media & News Headquarters
+                    Media, Music & Entertainment Headquarters
                 </p>
-
             </div>
 
-            <div class="bg-gray-50 p-6 rounded-2xl shadow">
-
-                <h3 class="text-xl font-bold mb-3">
-                    📞 Contact
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition hover:shadow-md">
+                <h3 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    📞 Contact Channels
                 </h3>
-                <p class="text-gray-600">
-                Phone: +234 7064941647<br>
-        Email: <span class="unicode-bidi: bidi-override; direction: rtl; unicode-bidi: isolate;">tbamidele021@gmail.com</span>
-    </p>
-                 Email: <a href="#" onclick="this.href='mailto:' + 'tbamidele021' + '@' + 'gmail.com'; window.location.href=this.href; return false;" class="text-blue-600 hover:underline">Send an Email</a>
-                 </p>
+                <div class="text-gray-600 text-sm space-y-2">
+                    <p><span class="font-semibold text-gray-800">Phone:</span> +234 7064941647</p>
+                    <p><span class="font-semibold text-gray-800">Email:</span> 
+                      <!--  <a href="mailto:tbamidele021@gmail.com" class="text-blue-600 hover:underline font-medium"></a> -->
+                    </p>
+                </div>
             </div>
 
-            <div class="bg-gray-50 p-6 rounded-2xl shadow">
-
-                <h3 class="text-xl font-bold mb-3">
-                    ⏰ Working Hours
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition hover:shadow-md">
+                <h3 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    ⏰ Operating Hours
                 </h3>
-
-                <p class="text-gray-600">
-                    Monday - Friday: 9AM - 6PM<br>
-                    Saturday: 10AM - 4PM
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    <span class="font-medium text-gray-800">Monday - Friday:</span> 9AM - 6PM<br>
+                    <span class="font-medium text-gray-800">Saturday:</span> 10AM - 4PM
                 </p>
-
             </div>
+        </div>
 
+        <!-- COLUMN 2: FULLY FUNCTIONAL SECURE FRONTEND FEEDBACK INTERFACE FORM -->
+        <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-lg">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Send an Instant Message</h3>
+            
+            <form id="contactSubmissionForm" action="/api/v1/contact" method="POST" class="space-y-4">
+                {% if csrf_token %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                {% endif %}
+                
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Full Name</label>
+                    <input type="text" name="name" placeholder="John Doe" required
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Email Address</label>
+                    <input type="email" name="email" placeholder="johndoe@example.com" required
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Your Message</label>
+                    <textarea name="message" rows="4" placeholder="How can we assist you today?" required
+                              class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 resize-none transition"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white text-sm font-semibold py-3 px-4 rounded-xl transition shadow-md tracking-wide">
+                    Submit Message
+                </button>
+            </form>
         </div>
 
     </div>
 
 </section>
 
-
-<!-- MAP SECTION (OPTIONAL) -->
-<section class="mt-10">
-
-    <div class="max-w-7xl mx-auto px-4">
-
-      <div class="w-full h-screen bg-black flex items-center justify-center overflow-hidden">
-    <img
-        src="/static/uploads/thumbnails.jpg"
-        alt="Photo"
-        class="max-w-full max-h-full object-contain" loading="eager">
-</div>
+<!-- BRAND INFRASTRUCTURE COVER ELEMENT SECTION -->
+<section class="max-w-7xl mx-auto px-4 pb-12">
+    <div class="w-full h-80 bg-gray-900 rounded-2xl overflow-hidden shadow-inner border border-gray-800 relative flex items-center justify-center">
+        <img src="/static/uploads/thumbnails.jpg" alt="BamTech Media Banner" class="w-full h-full object-cover opacity-80" loading="lazy">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
     </div>
-
 </section>
 
+<!-- REFRESHLESS RECEPTACLE PIPELINE SCRIPTS FORM ACTIONS EVENT LISTENER -->
+<script>
+const contactFormNode = document.getElementById("contactSubmissionForm");
+if (contactFormNode) {
+    contactFormNode.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const submitButtonElement = this.querySelector('button[type="submit"]');
+        const csrfTokenNode = this.querySelector('input[name="csrf_token"]');
+        const token = csrfTokenNode ? csrfTokenNode.value : "";
+        const payload = new URLSearchParams(new FormData(this));
+
+        try {
+            submitButtonElement.disabled = true;
+            submitButtonElement.innerText = "Sending Message...";
+
+            const networkResponse = await fetch(this.action, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": token,
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: payload,
+                credentials: "include"
+            });
+
+            if (networkResponse.ok) {
+                alert("Thank you! Your message has been sent successfully to BamTech headquarters.");
+                this.reset();
+            } else {
+                const errPayload = await networkResponse.json().catch(() => ({}));
+                alert(errPayload.detail || "Submission Error: Failed to transmit message properties.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("A transmission disruption occurred while sending your message data.");
+        } finally {
+            submitButtonElement.disabled = false;
+            submitButtonElement.innerText = "Submit Message";
+        }
+    });
+}
+</script>
 {% endblock %}

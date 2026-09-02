@@ -1,69 +1,216 @@
- {% for item in feed %}
+{% for item in feed if item.type is defined and item.type != 'video' %}
 
-    <!-- ================= UPPER IMAGE, VIDEO COVER, & BADGE LAYOUT ================= -->
+<div class="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden hover:shadow-xl transition flex flex-col justify-between h-full">
+
+    <!-- ================================================= -->
+    <!-- MEDIA AREA                                        -->
+    <!-- ================================================= -->
+
     <div>
-        {% if item.type == 'video' %}
-            <!-- ✅ VIDEOS: Skip images entirely and render the video element right at the top of the card -->
-            {% if item.video_file %}
-                <video controls class="w-full h-56 object-cover bg-black" preload="none"
-                       poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                       src="{% if item.video_file.startswith('/static') %}{{ item.video_file }}{% else %}{{ url_for('static', path='uploads/' ~ item.video_file) }}{% endif %}"></video>
-            {% endif %}
-        {% else %}
-            <!-- ✅ OTHER CONTENT TYPES (News & Music): Maintain standard image/placeholder thumbnails -->
-            {% if item.image %}
+
+        {% if item.type == 'news' %}
+
+            {% if item.image is defined and item.image %}
+
                 {% if item.image.startswith('/static') or item.image.startswith('http') %}
-                    <img src="{{ item.image }}" alt="{{ item.title | e }}" class="w-full h-56 object-cover bg-gray-100">
+
+                    <img
+                        src="{{ item.image }}"
+                        alt="{{ item.title | default('', true) | e }}"
+                        class="w-full h-56 object-contain bg-gray-50"
+                        loading="lazy"
+                    >
+
                 {% else %}
-                    <img src="{{ url_for('static', path='uploads/' ~ item.image) }}" alt="{{ item.title | e }}" class="w-full h-56 object-cover bg-gray-100">
+
+                    <img
+                        src="{{ url_for('static', path='uploads/' ~ item.image) }}"
+                        alt="{{ item.title | default('', true) | e }}"
+                        class="w-full h-56 object-contain bg-gray-50"
+                        loading="lazy"
+                    >
+
                 {% endif %}
-            {% else %}
-                <img src="/static/img/placeholder.jpg" alt="Default Placeholder Cover" class="w-full h-56 object-cover bg-gray-100">
+
             {% endif %}
+
+
+        {% elif item.type == 'music' %}
+
+            {% if item.image is defined and item.image %}
+
+                {% if item.image.startswith('/static') or item.image.startswith('http') %}
+
+                    <img
+                        src="{{ item.image }}"
+                        alt="{{ item.title | default('', true) | e }}"
+                        class="w-full h-56 object-contain bg-gray-50"
+                        loading="lazy"
+                    >
+
+                {% else %}
+
+                    <img
+                        src="{{ url_for('static', path='uploads/' ~ item.image) }}"
+                        alt="{{ item.title | default('', true) | e }}"
+                        class="w-full h-56 object-contain bg-gray-50"
+                        loading="lazy"
+                    >
+
+                {% endif %}
+
+            {% endif %}
+
         {% endif %}
+
+
+        <!-- ================================================= -->
+        <!-- CARD INFORMATION                                  -->
+        <!-- ================================================= -->
 
         <div class="p-5 pb-0">
-            <!-- Dynamic Category/Type Badge Module -->
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full text-white uppercase tracking-wider
-                {% if item.type == 'news' %}bg-red-500
-                {% elif item.type == 'video' %}bg-blue-500
-                {% else %}bg-purple-500{% endif %}">
-                {{ item.type | title | e }}
+
+            <!-- TYPE BADGE -->
+
+            <span
+                class="text-xs font-semibold px-2.5 py-1 rounded-full text-white uppercase tracking-wider
+                {% if item.type == 'news' %}
+                    bg-red-500
+                {% elif item.type == 'music' %}
+                    bg-purple-500
+                {% else %}
+                    bg-gray-500
+                {% endif %}"
+            >
+                {{ item.type | default('content', true) | title | e }}
             </span>
 
+
+            <!-- TITLE -->
+
             <h3 class="text-xl font-bold mt-4 text-gray-900 break-words line-clamp-2">
-                {{ item.title | e }}
+                {{ item.title | default('', true) | e }}
             </h3>
 
-            {% if item.content %}
-            <p class="text-gray-600 mt-3 text-sm break-words line-clamp-3">
-                {{ (item.content[:120] | e) }}...
-            </p>
+
+            <!-- CONTENT -->
+
+            {% if item.content is defined and item.content %}
+
+                <p class="text-gray-600 mt-3 text-sm break-words line-clamp-3">
+                    {{ item.content[:120] | striptags | e }}...
+                </p>
+
             {% endif %}
+
         </div>
+
     </div>
 
-    <!-- ================= LOWER CONTROLS & MEDIA TIMELINE PLAYER CORE ================= -->
-    <div class="p-5 pt-0">
-        <!-- Metadata Metrics Bar -->
-        <div class="flex justify-between items-center mt-5 text-xs font-medium text-gray-400 border-t pt-4">
-            <span>👁 {{ item.views or 0 }} views</span>
-            <span>📅 {{ item.created_at.strftime('%d %b %Y') if item.created_at else '' }}</span>
-        </div>
 
-        <!-- ✅ FIXED: Removed the old lower video placement so videos don't display twice -->
+    <!-- ================================================= -->
+    <!-- LOWER CONTROLS                                    -->
+    <!-- ================================================= -->
+
+    <div class="p-5 pt-0 mt-auto">
+
+
+        <!-- ================================================= -->
+        <!-- MUSIC PLAYER                                      -->
+        <!-- ================================================= -->
+
         {% if item.type == 'music' %}
-            {% if item.music_file %}
-                <audio controls class="w-full mt-4" preload="metadata"
-                       src="{% if item.music_file.startswith('/static') %}{{ item.music_file }}{% else %}{{ url_for('static', path='uploads/' ~ item.music_file) }}{% endif %}"></audio>
+
+            {% if item.music_file is defined and item.music_file %}
+
+                <audio
+                    controls
+                    class="w-full mt-4 h-8 opacity-90 focus:opacity-100 transition"
+                    preload="metadata"
+                >
+
+                    <source
+                        src="{% if item.music_file.startswith('/static') or item.music_file.startswith('http') %}{{ item.music_file }}{% else %}{{ url_for('static', path='uploads/' ~ item.music_file) }}{% endif %}"
+                        type="audio/mpeg"
+                    >
+
+                    Your browser does not support audio playback.
+
+                </audio>
+
+            {% elif item.embed_url is defined and item.embed_url %}
+
+                <div class="w-full mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+
+                    <iframe
+                        src="{{ item.embed_url }}"
+                        class="w-full border-0"
+                        height="166"
+                        loading="lazy"
+                        allow="autoplay; encrypted-media"
+                        allowfullscreen>
+                    </iframe>
+
+                </div>
+
             {% endif %}
+
         {% endif %}
 
-        <!-- Navigation Action Buttons -->
-        <a href="{% if item.type == 'video' %}/videos/{{ item.id }}{% else %}/{{ item.type }}/{{ item.slug or item.id }}{% endif %}"
-           class="inline-block mt-4 text-sm font-semibold text-blue-600 hover:text-blue-800 transition">
-            Continue Reading →
-        </a>
+
+        <!-- ================================================= -->
+        <!-- METRICS                                           -->
+        <!-- ================================================= -->
+
+        <div
+            class="flex justify-between items-center mt-5 text-xs font-medium text-gray-400 border-t pt-4"
+        >
+
+            <span>
+                👁 {{ item.views | default(0, true) }} views
+            </span>
+
+            <span>
+                📅
+                {{ item.created_at.strftime('%d %b %Y')
+                   if item.created_at is defined and item.created_at
+                   else '' }}
+            </span>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- NAVIGATION                                        -->
+        <!-- ================================================= -->
+
+        {% if item.type == 'music'
+              and item.slug is defined
+              and item.slug %}
+
+            <a
+                href="/music/{{ item.slug }}"
+                class="inline-block mt-4 text-sm font-semibold text-purple-600 hover:text-purple-800 transition"
+            >
+                Listen Track →
+            </a>
+
+
+        {% elif item.type == 'news'
+              and item.slug is defined
+              and item.slug %}
+
+            <a
+                href="/news/{{ item.slug }}"
+                class="inline-block mt-4 text-sm font-semibold text-red-600 hover:text-red-800 transition"
+            >
+                Continue Reading →
+            </a>
+
+        {% endif %}
+
     </div>
+
+</div>
 
 {% endfor %}

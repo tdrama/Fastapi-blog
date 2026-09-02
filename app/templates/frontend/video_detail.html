@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "/frontend/base.html" %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
@@ -15,7 +15,15 @@
 
     <!-- RESPONSIVE VIDEO PLAYER FRAME -->
     <div class="mt-4 sm:mt-6 rounded-2xl overflow-hidden bg-black border shadow-lg">
-        <video controls class="w-full h-auto max-h-[550px] object-contain" preload="metadata">
+       {% if video.embed_url %}
+    <iframe
+        class="w-full h-64"
+        src="{{ video.embed_url }}"
+        frameborder="0"
+        allowfullscreen>
+    </iframe>
+{% else %}
+         <video controls controlsList="nodownload" class="w-full h-auto max-h-[550px] object-contain" preload="metadata">
             {% if video.video_file.startswith('/static') or video.video_file.startswith('http') %}
                 <source src="{{ video.video_file }}" type="video/mp4">
             {% else %}
@@ -23,13 +31,12 @@
             {% endif %}
             Your browser does not support the video tag playback.
         </video>
+    {% endif %}
     </div>
 
     <!-- ACTIONS BLOCK: DOWNLOAD & SHARE -->
     <div class="mt-6 flex flex-col sm:flex-row gap-4 items-center border-b pb-6">
-        <a href="{% if video.video_file.startswith('/static') %}{{ video.video_file }}{% else %}/static/uploads/{{ video.video_file }}{% endif %}"
-           download
-           class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-xl text-center text-sm transition shadow-sm shrink-0">
+        <a href="{% if video.video_file.startswith('/static') %}{{ video.video_file }}{% else %}/static/uploads/{{ video.video_file }}{% endif %}"  download class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-xl text-center text-sm transition shadow-sm shrink-0">
             Download Video Track
         </a>
 

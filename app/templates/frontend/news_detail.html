@@ -5,11 +5,11 @@
 
     <!-- NEWS IMAGE --->
     {% if news.image %}
-    <div class="mb-6 overflow-hidden rounded-2xl">
-        <!-- ✅ FIXED PATHWAY: Compiles your static uploads path perfectly -->
+    <div class="mb-6 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
+        <!-- ✅ FIXED ASPECT RATIO: Replaced object-cover with object-contain to render 100% of the image without cropping -->
         <img
             src="{{ news.image }}"
-            class="w-full h-[250px] md:h-[500px] object-cover"
+            class="w-full h-auto max-h-[500px] object-contain mx-auto"
             alt="News Image"
         >
     </div>
@@ -18,14 +18,12 @@
     <!-- CATEGORY -->
     <div class="mb-3">
         <span class="bg-blue-600 text-white text-xs px-3 py-1 rounded-full">
-            <!-- ✅ SECURED: Context-escaped text field -->
             {{ news.category.name|e if news.category else 'Uncategorized' }}
         </span>
     </div>
 
     <!-- TITLE -->
-    <h1 class="text-3xl md:text-5xl font-bold mb-4 leading-tight break-words">
-        <!-- ✅ SECURED: Sanitized layout title text -->
+    <h1 class="text-3xl text-white md:text-5xl font-bold mb-4 leading-tight break-words">
         {{ news.title | e }}
     </h1>
 
@@ -41,7 +39,6 @@
     <!-- CONTENT -->
     <div class="bg-white rounded-2xl shadow p-6 md:p-8">
         <div class="prose max-w-none text-gray-800 leading-8 break-words whitespace-pre-wrap">
-            <!-- ✅ SECURED: String-filtered to prevent Stored XSS browser hijacking -->
             {{ news.content|safe }}
         </div>
     </div>
@@ -55,7 +52,6 @@
 
     <!-- SHARE SYSTEM LINK BOX -->
     <div class="mt-4">
-        <!-- ✅ SECURED: Escaped reflected URL variable parameter data -->
         <input
             id="newsLink"
             type="text"
@@ -87,14 +83,12 @@
         </div>
 
         <!-- COMMENT FORM -->
-        <!-- ✅ OPTIMIZED: Added id="publicNewsCommentForm" to capture execution loops -->
         <form
             id="publicNewsCommentForm"
             action="/news/{{ news.id }}/comment"
             method="POST"
             class="space-y-5 mb-10"
         >
-            <!-- ✅ FIXED: Injects the cryptographically signed layout hash value dynamically -->
             <input type="hidden" id="csrfToken" name="csrf_token" value="{{ csrf_token }}">
 
             <!-- NAME -->
@@ -149,7 +143,6 @@
                 <!-- HEADER -->
                 <div class="flex items-center justify-between mb-3">
                     <div>
-                        <!-- ✅ SECURED: Escaped user names to block script execution -->
                         <h3 class="font-bold text-lg text-gray-900 break-words">
                             {{ comment.name | e }}
                         </h3>
@@ -160,7 +153,6 @@
                 </div>
 
                 <!-- COMMENT CONTENT -->
-                <!-- ✅ SECURED: Text filtered to close XSS injection security vulnerabilities -->
                 <div class="text-gray-700 leading-7 break-words whitespace-pre-wrap">
                     {{ comment.content | e }}
                 </div>
@@ -176,13 +168,13 @@
     </div>
 </div>
 
-<!-- ✅ PERFECTED DUAL FUNCTION INTERCEPT HANDLING SYSTEM -->
+<!-- JAVASCRIPT SYSTEM ENGINE -->
 <script>
 function copyNewsLink() {
     const input = document.getElementById("newsLink");
     if (input) {
         input.select();
-        input.setSelectionRange(0, 99999); // Compatibility layout patch for mobile clients
+        input.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(input.value).then(() => {
             alert("Link copied successfully!");
         });
@@ -193,13 +185,13 @@ function copyNewsLink() {
 const newsCommentForm = document.getElementById("publicNewsCommentForm");
 if (newsCommentForm) {
     newsCommentForm.addEventListener("submit", async function(e) {
-        e.preventDefault(); // Stop standard browser page updates
-        
+        e.preventDefault();
+
         const form = e.target;
         const tokenElement = document.getElementById("csrfToken");
-        
+
         if (!tokenElement || !tokenElement.value) {
-            alert("Security Configuration Error: Active tracking authentication token missing.");
+            alert("Security Configuration Error: Active tracking token missing.");
             return;
         }
 
@@ -210,7 +202,7 @@ if (newsCommentForm) {
             const response = await fetch(form.action, {
                 method: "POST",
                 headers: {
-                    "X-CSRF-Token": token // ✅ SATISFIES THE MAIN MIDDLEWARE HEADERS ENGINE
+                    "X-CSRF-Token": token
                 },
                 body: formData,
                 credentials: "include"
@@ -219,14 +211,14 @@ if (newsCommentForm) {
             if (response.redirected) {
                 window.location.href = response.url;
             } else if (response.ok) {
-                window.location.reload(); // Refresh viewport tracking grids cleanly on submission success
+                window.location.reload();
             } else {
-                const data = await response.json().catch(() => ({}));
-                alert(data.detail || "Error: Failed to process public comment stream entry securely.");
+                const errData = await response.json();
+                alert("Error posting comment: " + (errData.detail || "Submission failed."));
             }
         } catch (err) {
-            console.error(err);
-            alert("A system network transmission error occurred during processing.");
+            console.error("Comment submission network failure:", err);
+            alert("Network connection error. Please try again.");
         }
     });
 }

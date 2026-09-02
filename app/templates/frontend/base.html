@@ -1,51 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- ✅ FIXED: Removed duplicate hardcoded properties, leaving clean, customizable template tokens -->
-    <title>{% if meta_title %}{{ meta_title | e }}{% else %}BAM-Tech{% endif %}</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/static/css/output.css">
+    <meta name="monetag" content="04c584a3d48c49f74ba798d6553f388b">
+    <script>(function(s){s.dataset.zone='11662443',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
     <link rel="icon" href="/static/favicon.ico">
+<!-- ============================================================
+     👑 HIGH-PERFORMANCE DYNAMIC OPEN GRAPH
+     ============================================================ -->
 
-    <meta name="description" content="{{ meta_description if meta_description else 'Latest news, music and videos from BAM-Tech' | e }}">
-    <meta name="keywords" content="news,music,videos,entertainment">
-    <meta name="author" content="BAM-Tech">
+<meta property="og:title" content="{{ (meta_title if meta_title else 'BAM-Tech') | e }}">
 
-    <meta property="og:title" content="{{ meta_title if meta_title else 'BAM-Tech' | e }}">
-    <meta property="og:description" content="{{ meta_description if meta_description else 'Latest news, music and videos from BAM-Tech' | e }}">
-    <meta property="og:type" content="website">
-    {% if meta_image %}
+<meta property="og:description" content="{{ (meta_description if meta_description else 'Latest news, music and videos from BAM-Tech') | e }}">
+
+<meta property="og:type" content="website">
+
+<meta property="og:url" content="https://therealbam.com{{ request.path if request and request.path else '/' }}">
+
+<meta property="fb:app_id" content="1062144353213069">
+
+{% if meta_image and (
+    meta_image.lower().endswith('.jpg') or
+    meta_image.lower().endswith('.jpeg') or
+    meta_image.lower().endswith('.png') or
+    meta_image.lower().endswith('.webp')
+) %}
+
+    <!-- ========================================================
+         DYNAMIC CONTENT IMAGE
+         News / Music / Video
+         ======================================================== -->
+
     <meta property="og:image" content="{{ meta_image | e }}">
+    <meta property="og:image:secure_url" content="{{ meta_image | e }}">
+    <meta property="og:image:alt" content="{{ (meta_title if meta_title else 'BAM-Tech') | e }}">
+
+    {% if meta_image.lower().endswith('.png') %}
+        <meta property="og:image:type" content="image/png">
+    {% elif meta_image.lower().endswith('.webp') %}
+        <meta property="og:image:type" content="image/webp">
+    {% else %}
+        <meta property="og:image:type" content="image/jpeg">
     {% endif %}
+
+{% else %}
+
+    <!-- ========================================================
+         HOMEPAGE / FALLBACK BRAND IMAGE
+         ======================================================== -->
+
+    <meta property="og:image" content="https://therealbam.com/static/og-image.png">
+    <meta property="og:image:secure_url" content="https://therealbam.com/static/og-image.png">
+    <meta property="og:image:alt" content="BAM-Tech">
+    <meta property="og:image:type" content="image/png">
+
+{% endif %}
+    <!-- =========================
+         TAILWIND / CSS
+    ========================== -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet"href="/static/css/output.css">
+
+
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen">
-
+<body class="bg-black flex flex-col min-h-screen">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7440749297580775"
+     crossorigin="anonymous"></script>
 <!-- MAIN RESPONSIVE VIEWPORT HEADER -->
-<header class="bg-white shadow p-4 sticky top-0 z-50">
+<header class="bg-black text-white  shadow p-4 sticky top-0 z-50">
     <div class="max-w-6xl mx-auto flex flex-col sm:flex-row gap-4 justify-between items-center">
 
         <!-- LOGO BRAND POINTER -->
         <a href="/" class="flex items-center gap-3 group shrink-0">
-            <svg class="w-10 h-10 text-blue-600 group-hover:text-blue-700 transition" viewBox="0 0 100 100" fill="none">
-                <path d="M20 15h25c8 0 15 6 15 14v2c0 6-4 11-10 12.5V44c6 1.5 10 6.5 10 12.5v2c0 8-7 14-15 14H20V15z"
-                      stroke="currentColor" stroke-width="6" stroke-linejoin="round" fill="none"/>
-                <circle cx="45" cy="28" r="2" fill="currentColor"/>
-                <circle cx="55" cy="50" r="2" fill="currentColor"/>
-                <circle cx="45" cy="72" r="2" fill="currentColor"/>
-                <path d="M70 35c3-3 3-8 0-11M75 30c6-6 6-15 0-21" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/>
-            </svg>
+       <img src="/static/logo.svg?v=999"alt="BamTech"class="w-10 h-10 object-contain">
             <div class="flex flex-col">
-                <span class="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-blue-600 transition">Bam<span class="text-blue-600">Tech</span></span>
-                <span class="text-xs text-gray-500 -mt-1">Tech Blog</span>
+                <span class="text-2xl font-bold tracking-tight text-white  group-hover:text-white transition">Bam<span class="text-white">Tech</span></span>
+                <span class="text-xs text-white mt-1">Tech Blog</span>
             </div>
         </a>
 
         <!-- HEADER ROUTING LINK NODES -->
-        <nav class="flex gap-6 text-sm font-semibold text-gray-600">
+        <nav class="flex gap-6 text-sm font-semibold text-white">
             <a href="/" class="hover:text-blue-600 transition">Home</a>
             <a href="/news" class="hover:text-blue-600 transition">News</a>
             <a href="/videos" class="hover:text-blue-600 transition">Videos</a>

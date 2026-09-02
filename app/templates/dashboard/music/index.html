@@ -1,228 +1,103 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="p-6">
-    <h1 class="text-3xl font-bold mb-6">Music Management</h1>
+<div class="p-6 max-w-6xl mx-auto space-y-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Music Management</h1>
+            <p class="text-gray-500 mt-1">Upload new audio tracks or hook external application embeds</p>
+        </div>
+        <a href="/dashboard" class="bg-black hover:bg-gray-800 text-white px-5 py-3 rounded-xl transition font-medium shadow text-center">
+            ← Dashboard
+        </a>
+    </div>
 
-    <a href="/dashboard" class="bg-black text-white px-4 py-2 rounded">Dashboard</a>
-
-    <!-- UPLOAD FORM -->
-    <div class="bg-white p-6 rounded-xl shadow mb-8">                    
-        <form id="uploadMusicForm" action="/dashboard/music/create"
-              method="POST"
-              enctype="multipart/form-data"
-              class="space-y-4">
-
+    <!-- UPLOAD CREATION INTERFACE CORE CARD -->
+    <div class="bg-white p-6 rounded-2xl shadow border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Upload New Track</h2>
+        <form id="uploadMusicForm" action="/dashboard/music/create" method="POST" enctype="multipart/form-data" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-            <!-- TITLE -->
-            <input type="text" name="title" placeholder="Title" required
-                   class="w-full border p-3 rounded">
-
-            <!-- ARTIST -->
-            <input type="text" name="artist" placeholder="Artist" required
-                   class="w-full border p-3 rounded">
-
-            <!-- DESCRIPTION -->
-            <textarea name="description" placeholder="Description"
-                      class="w-full border p-3 rounded h-32"></textarea>
-
-            <!-- MUSIC FILE -->
-            <div>
-                <label class="block mb-1 font-medium">Music File</label>
-                <input type="file" name="music" accept="audio/*" required
-                       class="w-full border p-3 rounded">
+            <div class="grid md:grid-cols-2 gap-4">
+                <input type="text" name="title" placeholder="Track Title" required class="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-black font-medium">
+                <input type="text" name="artist" placeholder="Artist Name" required class="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-black font-medium">
             </div>
 
-            <!-- COVER IMAGE -->
-            <div>
-                <label class="block mb-1 font-medium">Cover Image</label>
-                <input type="file" name="cover_image" accept="image/*"
-                       class="w-full border p-3 rounded">
+            <!-- ✅ SYNCHRONIZED FRONTEND FIELD GRID (WITHOUT INSTAGRAM) -->
+            <textarea name="description" placeholder="Write track details, summaries or lyrics..." class="w-full border p-3 rounded-xl h-24 outline-none resize-none"></textarea>
+
+            <div class="grid md:grid-cols-2 gap-4 items-start">
+                <div>
+                    <label class="block mb-1.5 font-semibold text-gray-700 text-sm">Select local audio file (.mp3)</label>
+                    <input type="file" name="music" accept="audio/*" class="w-full border p-2.5 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block mb-1.5 font-semibold text-gray-700 text-sm">Upload Cover image artwork</label>
+                    <input type="file" name="cover_image" accept="image/*" class="w-full border p-2.5 rounded-xl text-sm">
+                </div>
             </div>
 
-            <!-- CATEGORY -->
-            <select name="category_id" required class="w-full border p-3 rounded">
-                <option value="" disabled selected>Select Category</option>
-                {% for cat in categories %}
-                    <option value="{{ cat.id }}">{{ cat.name|e }}</option>
-                {% endfor %}
-            </select>
+            <div>
+                <label class="block mb-1.5 font-semibold text-blue-600 text-sm">External Streaming Embed Link (Optional)</label>
+                <input type="url" name="embed_url" placeholder="https://spotify.com... or any standard player link" class="w-full border border-blue-200 p-3 rounded-xl bg-blue-50/30 outline-none">
+            </div>
 
-            <!-- BUTTON -->
-            <button class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded w-full">
-                Upload Music
+            <div>   
+                <label class="block mb-2 font-semibold">Category</label>
+                <select name="category_id" required class="w-full border p-3 rounded-xl">
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition shadow-sm w-full cursor-pointer">
+                Publish Track Release
             </button>
         </form>
     </div>
 
-    <!-- TABLE -->
-    <div class="bg-white rounded-xl shadow overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="p-4">ID</th>
+    <!-- TRACK DISK RECORDS DATAGRID ROWS TABLE -->
+    <div class="bg-white rounded-2xl shadow border overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-xs font-bold uppercase tracking-wider text-gray-500">
                     <th class="p-4">Cover</th>
-                    <th class="p-4">Title</th>
-                    <th class="p-4">Artist</th>
-                    <th class="p-4">Audio</th>
-                    <th class="p-4">Plays</th>
-                    <th class="p-4">Created</th>
-                    <th class="p-4">Actions</th>
+                    <th class="p-4">Track Metadata Details</th>
+                    <th class="p-4">Metrics Metrics</th>
+                    <th class="p-4 text-center">Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for item in musics %}
-                <tr class="border-t">
-                    <td class="p-4">{{ item.id }}</td>
-
+            <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+                {% for track in musics %}
+                <tr>
                     <td class="p-4">
-                        {% if item.cover_image %}
-                            <img src="{{ url_for('static', path='uploads/' ~ item.cover_image) }}" w	idth="60" class="rounded" alt="Cover">
+                        {% if track.cover_image %}
+                        <img src="{{ url_for('static', path='uploads/' ~ track.cover_image) }}" class="w-12 h-12 object-cover rounded-xl border">
                         {% else %}
-                            No Cover
+                        <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center font-bold text-gray-400">🎵</div>
                         {% endif %}
                     </td>
-
-                    <td class="p-4">{{ item.title|e }}</td>
-                    <td class="p-4">{{ item.artist|e }}</td>
-
                     <td class="p-4">
-                        <audio controls>
-                            <source src="{{ url_for('static', path='uploads/' ~ item.music_file) }}">
-                        </audio>
+                        <p class="font-bold text-gray-900">{{ track.title|e }}</p>
+                        <p class="text-xs text-blue-600 font-medium">{{ track.artist|e }}</p>
                     </td>
-
-                    <td class="p-4">{{ item.views or 0 }}</td>
-                    <td class="p-4">{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-
-                    <td class="p-4 flex gap-2">
-                        <a href="/dashboard/music/edit/{{ item.id }}"
-                           class="bg-blue-500 text-white px-3 py-1 rounded">
-                            Edit
-                        </a>
-                        
-                        <!-- Delete as POST form -->
-                        <form method="post" action="/dashboard/music/delete/{{ item.id }}" 
-                              class="inline delete-track-form" onsubmit="return confirm('Delete this track?')">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                            <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded">
-                                Delete
-                            </button>
-                        </form>
+                    <td class="p-4 text-xs font-medium text-gray-500">
+                        <p>👁 {{ track.views or 0 }} views</p>
+                        <p>⬇️ {{ track.downloads or 0 }} downloads</p>
                     </td>
+                    <td class="p-4 text-center">
+                        <a href="/dashboard/music/edit/{{ track.id }}" class="text-sm font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition">Edit Track</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="p-8 text-center text-gray-400 italic">No audio tracks recorded inside your storage rows database index trees.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
- <!--  INTEGRATED SECURE ALIGNED PAGINATION CONTROL PANEL FOOTER -->
-        <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
-            <span class="text-sm text-gray-600">
-                Page <span class="font-semibold text-black">{{ page if page else 1 }}</span> of <span class="font-semibold text-black">{{ total_pages if total_pages > 0 else 1 }}</span>
-            </span>
-
-            <div class="flex gap-2">
-                <!-- PREVIOUS SWITCH TRIGGER -->
-                {% if has_prev %}
-                <a href="/dashboard/music?page={{ prev_page }}" class="px-4 py-2 border bg-white text-gray-800 rounded-xl hover:bg-gray-100 font-medium text-sm transition shadow-sm">
-                    ← Previous
-                </a>
-                {% else %}
-                <button disabled class="px-4 py-2 border bg-gray-100 text-gray-400 rounded-xl font-medium text-sm cursor-not-allowed">
-                    ← Previous
-                </button>
-                {% endif %}
-
-                <!-- NEXT SWITCH TRIGGER -->
-                {% if has_next %}
-                <a href="/dashboard/music?page={{ next_page }}" class="px-4 py-2 border bg-white text-gray-800 rounded-xl hover:bg-gray-100 font-medium text-sm transition shadow-sm">
-                    Next →
-                </a>
-                {% else %}
-                <button disabled class="px-4 py-2 border bg-gray-100 text-gray-400 rounded-xl font-medium text-sm cursor-not-allowed">
-                    Next →
-                </button>
-                {% endif %}
-            </div>
-        </div>
-
-    </div> <!-- Closes outer table container boundary card -->
 </div>
-
-<script>
-// 1. ASYNCHRONOUS MUSIC UPLOAD HANDLING
-const uploadForm = document.getElementById("uploadMusicForm");
-if (uploadForm) {
-    uploadForm.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const formData = new FormData(uploadForm);
-        const csrfToken = formData.get("csrf_token");
-
-        try {
-            const res = await fetch(uploadForm.action, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    "X-CSRF-Token": csrfToken
-                },
-                credentials: "include"
-            });
-
-            if (res.redirected) {
-                window.location.href = res.url;
-            } else if (res.ok) {
-                window.location.reload(); // Reload the tracks table cleanly on success
-            } else {
-                const data = await res.json();
-                alert(data.detail || "Failed to upload track");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("An error occurred during media transmission.");
-        }
-    });
-}
-
-// 2. DELEGATED ROW ASYNCHRONOUS TRACK REMOVAL HANDLING
-document.querySelectorAll(".delete-track-form").forEach(form => {
-    form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        
-        // Retain native visual prompt workflow inside JS loop logic
-        if (!confirm("Are you sure you want to permanently delete this track?")) {
-            return;
-        }
-
-        const formData = new FormData(form);
-        const csrfToken = formData.get("csrf_token");
-
-        try {
-            const res = await fetch(form.action, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    "X-CSRF-Token": csrfToken
-                },
-                credentials: "include"
-            });
-
-            if (res.redirected) {
-                window.location.href = res.url;
-            } else if (res.ok) {
-                // Instantly scrub the row from the view grid without forcing an aggregate page pull
-                form.closest("tr").remove();
-            } else {
-                const data = await res.json();
-                alert(data.detail || "Failed to complete deletion routing.");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("An execution error happened while removing this track entry.");
-        }
-    });
-});
-
-</script>
-
 {% endblock %}

@@ -10,7 +10,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from itsdangerous import Signer, BadSignature
-
+from contextlib import asynccontextmanager
 import secrets
 
 from app.core.database import Base, engine
@@ -28,7 +28,7 @@ from app.models.music import Music
 from app.models.comment import Comment
 from app.models.subscriber import Subscriber
 from app.models.category import Category
-
+import os
 #from app.models import user, video, music, news, comment, analytics, subscriber, stream_log, login_log, category, feed
 # Routers
 from app.routes import category as category_router
@@ -43,17 +43,13 @@ from app.routes.comments import router as comments_router
 from app.routes.subscribers import router as subscribers_router
 from app.routes.search import router as search_router
 from app.routes.file import router as file_router
+from app.routes.contact import router as contact_router
 from slowapi import Limiter
 
 # =========================
 # CREATE DATABASE TABLES
 # =========================
-Base.metadata.create_all(bind=engine)
-try:
-    from init_db import create_feed_view
-    create_feed_view()
-except Exception as e:
-    print(f"Feed view aggregation initialization skipped: {e}")
+
 # =========================
 # RATE LIMITER
 # =========================
@@ -61,8 +57,35 @@ limiter = Limiter(key_func=get_remote_address)
 
 # =========================
 # CREATE FASTAPI APP
-# =========================
-app = FastAPI()
+# ===================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # This code executes ONCE when the master process fires up
+    # 🛡️ SYSTEM SAFEGUARD: Check if this is the primary worker before rebuilding
+    # Gunicorn/Uvicorn sets an internal worker context ID string variable
+    worker_id = os.environ.get("FORK_ID") or os.environ.get("WORKER_ID") or "0"
+    
+    # Only allow the master process or first active worker to initialize schemas
+    if worker_id in ("0", "1"):
+        try:
+            print("🚀 Master Worker initializing core production relational tables...")
+            Base.metadata.create_all(bind=engine)
+            
+            # Place your exact "Feed table rebuild" function wrapper execution call right here:
+            # rebuild_feed_table_indices(db) 
+            print("✅ Relational tables and views successfully validated.")
+        except Exception as e:
+            print("ℹ️ Table initialization skipped or handled by parallel thread:", e)
+            
+    yield
+    # Code here executes when the application fully shuts down
+    print("Shutting down worker thread instance...")
+
+# 2. Assign the lifespan
+app = FastAPI(
+title="TheRealBam Production Platform Engine",
+    lifespan=lifespan 
+)
 
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
@@ -108,11 +131,28 @@ async def secure_csrf_and_headers_middleware(request: Request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://jquery.com https://jsdelivr.net; "
-        "style-src 'self' 'unsafe-inline' https://jsdelivr.net; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+        "https://code.jquery.com "
+        "https://cdn.jsdelivr.net "
+        "https://pagead2.googlesyndication.com "
+        "https://googleads.g.doubleclick.net "
+        "https://tpc.googlesyndication.com "
+        "https://al5sm.com; "
+        "style-src 'self' 'unsafe-inline' "
+        "https://cdn.jsdelivr.net; "
         "img-src 'self' data: blob: https:; "
-        "font-src 'self' data: https://jsdelivr.net; "
-        "connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://onrender.com; "
+        "font-src 'self' data: https://cdn.jsdelivr.net; "
+        "connect-src 'self' "
+        "https://cdn.jsdelivr.net "
+        "https://pagead2.googlesyndication.com "
+        "https://googleads.g.doubleclick.net "
+        "https://tpc.googlesyndication.com "
+        "https://al5sm.com; "
+        "media-src 'self' blob: https:; "
+        "frame-src 'self' "
+        "https://googleads.g.doubleclick.net "
+        "https://tpc.googlesyndication.com "
+        "https://al5sm.com; "
     )
     return response
 
@@ -204,6 +244,9 @@ def create_upload_dirs():
 def favicon():
     return FileResponse("app/static/favicon.ico")
 
+@app.get("/ads.txt")
+async def get_ads_txt():
+    return FileResponse("app/static/ads.txt")
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # =========================
@@ -221,4 +264,4 @@ app.include_router(comments_router)
 app.include_router(subscribers_router)
 app.include_router(search_router)
 app.include_router(file_router)
-
+app.include_router(contact_router)

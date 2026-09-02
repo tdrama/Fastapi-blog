@@ -64,3 +64,26 @@ logs/
 # MIGRATIONS (optional safe ignore)
 # =========================
 alembic/versions/*.pyc
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# SQLite database / backups
+blog.db
+*.db
+*.db.broken
+backups/
+
+# Editor temporary / backup files
+*.save
+*.save.*
+*.back
+*.swp
+*.swo
+*~
+
+# Local backup scripts
+backup_db.sh
+

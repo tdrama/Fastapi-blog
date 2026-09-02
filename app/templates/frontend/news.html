@@ -5,8 +5,8 @@
 
     <div class="flex items-center justify-between mb-10">
         <div>
-            <h1 class="text-4xl font-bold">Latest News</h1>
-            <p class="text-gray-500 mt-2">Breaking news and trending stories</p>
+            <h1 class="text-4xl text-white font-bold">Latest News</h1>
+            <p class="text-white mt-2">Breaking news and trending stories</p>
         </div>
     </div>
 
@@ -21,13 +21,13 @@
                 <img
                     
                   src="{{ news.image }}"
-                    class="w-full h-56 object-cover"
+                    class="w-full h-56 object-contain bg-gray-50"
                     alt="News Cover Image"
                 >
                 {% else %}
                 <img
                     src="/static/img/default-news.jpg"
-                    class="w-full h-56 object-cover"
+                    class="w-full h-56 object-contain bg-gray-50"
                     alt="Default Cover Image"
                 >
                 {% endif %}
@@ -48,7 +48,9 @@
                     <h2 class="text-2xl font-bold mb-3 break-words line-clamp-2">
                         {{ news.title | e }}
                     </h2>
-
+                      <p class="text-sm text-gray-500 mb-3">
+    👤 {{ news.author.username if news.author else 'Admin' }}
+</p>
                     <!-- ✅ SECURED: Escapes and safely slices preview paragraph text -->
                     <p class="text-gray-600 line-clamp-3 text-sm break-words">
                         {{ (news.content[:150] | safe) if news.content else "" }}...
